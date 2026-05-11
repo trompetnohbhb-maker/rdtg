@@ -1,27 +1,42 @@
 -- =======================================================
---               YUTAHUB V7.0 SECURE LOADER               
+--          YUTAHUB V7.0 ULTRA-OBFUSCATOR COMPILER
 -- =======================================================
-local GITHUB_TOKEN = "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"
-local USERNAME = "trompetnohbhb-maker" 
-local REPO_NAME = "yutahub-aws"       
-local FILE_PATH = "kick" 
+local ID_PASTEBIN_ASLI = "68qspC8i" -- ID Pastebin kodemu saat ini
 
-local Url = string.format("githubusercontent.com", USERNAME, REPO_NAME, FILE_PATH)
+local Url = "https://pastebin.com/raw/68qspC8i" .. ID_PASTEBIN_ASLI
+local Success, RawCode = pcall(function() return game:HttpGet(Url, true) end)
 
-local Success, Result = pcall(function()
-    return game:HttpGet(Url, true, {
-        ["Authorization"] = "token " .. GITHUB_TOKEN,
-        ["Accept"] = "application/vnd.github.v3.raw"
-    })
-end)
-
-if Success and Result then
-    local ExecuteScript, Error = loadstring(Result)
-    if ExecuteScript then
-        ExecuteScript()
+if Success and RawCode then
+    -- 1. Mengompilasi kode asli menjadi Bytecode Biner Mutlak (Mustahil dibaca)
+    local CompiledFunction, CompileError = loadstring(RawCode)
+    if CompiledFunction then
+        local Bytecode = string.dump(CompiledFunction)
+        
+        -- 2. Mengubah bentuk bytecode menjadi teks biner bergaris miring (\108\111\97...)
+        local EncryptedResult = ""
+        for i = 1, #Bytecode do
+            EncryptedResult = EncryptedResult .. "\\" .. string.byte(Bytecode, i)
+        end
+        
+        -- 3. Membungkus kode biner ke dalam fungsi eksekusi aman
+        local FinalScript = "loadstring(\"" .. EncryptedResult .. "\")()"
+        
+        -- 4. Otomatis menyalin hasilnya ke Clipboard HP / PC kamu
+        local setclip = setclipboard or toclipboard or (Clipboard and Clipboard.set)
+        if setclip then
+            setclip(FinalScript)
+            print("=========================================")
+            print("SUCCESS! KODE ACAK TOTAL SUDAH DISALIN KE CLIPBOARD!")
+            print("Silakan buka Pastebin kamu, klik Edit, lalu Paste (Tempel) hasilnya di sana.")
+            print("=========================================")
+        else
+            -- Jika executor tidak mendukung setclipboard, cetak ke Developer Console (F9)
+            print("KODE ACAK TOTAL (Salin semua teks di bawah ini):")
+            print(FinalScript)
+        end
     else
-        warn("[YutaHub] Gagal menyusun struktur kode: " .. tostring(Error))
+        warn("Gagal menyusun kode, ada error sintaks: " .. tostring(CompileError))
     end
 else
-    warn("[YutaHub] Gagal terhubung. Pastikan repositori '" .. REPO_NAME .. "' sudah di-Private.")
+    warn("Gagal mengambil kode asli dari Pastebin.")
 end
