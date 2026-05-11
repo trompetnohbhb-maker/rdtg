@@ -1,199 +1,27 @@
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+-- =======================================================
+--               YUTAHUB V7.0 SECURE LOADER               
+-- =======================================================
+local GITHUB_TOKEN = "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"
+local USERNAME = "trompetnohbhb-maker" 
+local REPO_NAME = "yutahub-aws"       
+local FILE_PATH = "kick" 
 
--- [[ 1. KONEKSI REMOTE ]] --
-local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+local Url = string.format("githubusercontent.com", USERNAME, REPO_NAME, FILE_PATH)
 
--- [[ 2. RESET STATUS ]] --
-_G.AutoFarm = false
-
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-if PlayerGui:FindFirstChild("YutaHub_Bankai") then PlayerGui.YutaHub_Bankai:Destroy() end
-
--- [[ 3. FUNGSI TWEEN ]] --
-local function TweenTo(targetCFrame)
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local root = char.HumanoidRootPart
-    local dist = (root.Position - targetCFrame.Position).Magnitude
-    local speed = 250 
-    local info = TweenInfo.new(dist/speed, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(root, info, {CFrame = targetCFrame})
-    tween:Play()
-    local timeout = tick() + (dist/speed) + 2
-    repeat task.wait() until tween.PlaybackState == Enum.PlaybackState.Completed or tick() > timeout
-end
-
--- [[ 4. DATA QUEST ]] --
-local function GetQuestData()
-    local lv = LocalPlayer.Data.Level.Value
-    if lv < 700 then
-        if lv < 10 then return "BanditQuest1", 1, "Bandit Quest Giver"
-        elseif lv < 15 then return "MonkeyQuest1", 1, "Monkey Quest Giver"
-        elseif lv < 30 then return "MonkeyQuest1", 2, "Monkey Quest Giver"
-        elseif lv < 40 then return "PirateIslandQuest", 1, "Pirate Quest Giver"
-        elseif lv < 60 then return "PirateIslandQuest", 2, "Pirate Quest Giver"
-        elseif lv < 75 then return "DesertIslandQuest", 1, "Desert Quest Giver"
-        elseif lv < 90 then return "DesertIslandQuest", 2, "Desert Quest Giver"
-        elseif lv < 120 then return "SnowIslandQuest", 1, "Snow Quest Giver"
-        elseif lv < 150 then return "SnowIslandQuest", 2, "Snow Quest Giver"
-        elseif lv < 175 then return "MarineTreeQuest", 1, "Marine Quest Giver"
-        elseif lv < 190 then return "MarineTreeQuest", 2, "Marine Quest Giver"
-        elseif lv < 210 then return "SkyQuest", 1, "Sky Quest Giver"
-        elseif lv < 250 then return "SkyQuest", 2, "Sky Quest Giver"
-        elseif lv < 275 then return "PrisonQuest", 1, "Warden Quest Giver"
-        elseif lv < 300 then return "PrisonQuest", 2, "Warden Quest Giver"
-        elseif lv < 330 then return "MagmaQuest", 1, "Magma Quest Giver"
-        elseif lv < 425 then return "MagmaQuest", 2, "Magma Quest Giver"
-        elseif lv < 450 then return "FishmanQuest", 1, "Fishman Quest Giver"
-        elseif lv < 575 then return "FishmanQuest", 2, "Fishman Quest Giver"
-        elseif lv < 625 then return "SkyExp1Quest", 1, "Sky Quest Giver"
-        elseif lv < 700 then return "SkyExp1Quest", 2, "Sky Quest Giver"
-        end
-    elseif lv < 1500 then
-        local qN, qI = "Area1Quest", 1
-        if lv < 725 then qN, qI = "Area1Quest", 1
-        elseif lv < 775 then qN, qI = "Area1Quest", 2
-        elseif lv < 800 then qN, qI = "Area2Quest", 1
-        elseif lv < 875 then qN, qI = "Area2Quest", 2
-        elseif lv < 900 then qN, qI = "MarineQuest2", 1
-        elseif lv < 950 then qN, qI = "MarineQuest2", 2
-        elseif lv < 975 then qN, qI = "ZombieQuest", 1
-        elseif lv < 1050 then qN, qI = "ZombieQuest", 2
-        elseif lv < 1075 then qN, qI = "SnowMountainQuest", 1
-        elseif lv < 1125 then qN, qI = "SnowMountainQuest", 2
-        elseif lv < 1175 then qN, qI = "IceIslandQuest", 1
-        elseif lv < 1250 then qN, qI = "IceIslandQuest", 2
-        elseif lv < 1275 then qN, qI = "LavaQuest", 1
-        elseif lv < 1350 then qN, qI = "LavaQuest", 2
-        elseif lv < 1425 then qN, qI = "FishmanQuest2", 1
-        elseif lv < 1500 then qN, qI = "FishmanQuest2", 2
-        end
-        return qN, qI, "Quest Giver"
-    else
-        local qN, qI = "Area1Quest", 1
-        if lv < 1575 then qN, qI = "Area1Quest", 1
-        elseif lv < 1625 then qN, qI = "Area1Quest", 2
-        elseif lv < 1650 then qN, qI = "Area2Quest", 1
-        elseif lv < 1725 then qN, qI = "Area2Quest", 2
-        elseif lv < 1775 then qN, qI = "FloatingTurtleQuest", 1
-        elseif lv < 1825 then qN, qI = "FloatingTurtleQuest", 2
-        elseif lv < 1900 then qN, qI = "FloatingTurtleQuest", 3
-        elseif lv < 1975 then qN, qI = "FloatingTurtleQuest", 4
-        elseif lv < 2025 then qN, qI = "HauntedQuest1", 1
-        elseif lv < 2075 then qN, qI = "HauntedQuest1", 2
-        elseif lv < 2125 then qN, qI = "HauntedQuest2", 1
-        elseif lv < 2200 then qN, qI = "HauntedQuest2", 2
-        elseif lv < 2275 then qN, qI = "IceCreamIslandQuest", 1
-        elseif lv < 2325 then qN, qI = "IceCreamIslandQuest", 2
-        elseif lv < 2375 then qN, qI = "CakeQuest1", 1
-        elseif lv < 2425 then qN, qI = "CakeQuest1", 2
-        elseif lv < 2475 then qN, qI = "CakeQuest2", 1
-        elseif lv < 2525 then qN, qI = "CakeQuest2", 2
-        elseif lv < 2575 then qN, qI = "AegisCurQuest", 1
-        elseif lv < 2625 then qN, qI = "AegisCurQuest", 2
-        elseif lv < 2675 then qN, qI = "GasQuest", 1
-        elseif lv < 2725 then qN, qI = "GasQuest", 2
-        elseif lv < 2775 then qN, qI = "ElizaQuest", 1
-        elseif lv <= 2800 then qN, qI = "ElizaQuest", 2
-        end
-        return qN, qI, "Quest Giver"
-    end
-    return "BanditQuest1", 1, "Bandit Quest Giver"
-end
-
--- [[ 5. SETUP UI ]] --
-local ScreenGui = Instance.new("ScreenGui", PlayerGui)
-ScreenGui.Name = "YutaHub_Bankai"
-ScreenGui.ResetOnSpawn = false
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 150, 0, 80)
-MainFrame.Position = UDim2.new(0.5, -75, 0.2, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-MainFrame.Active = true; MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame)
-
-local ClickButton = Instance.new("TextButton", MainFrame)
-ClickButton.Size = UDim2.new(0.9, 0, 0, 50); ClickButton.Position = UDim2.new(0.05, 0, 0.15, 0)
-ClickButton.Text = "AUTO FARM: OFF"; ClickButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-ClickButton.TextColor3 = Color3.fromRGB(255, 255, 255); ClickButton.Font = Enum.Font.SourceSansBold
-Instance.new("UICorner", ClickButton)
-
--- [[ 6. LOGIKA ALL-IN-ONE ]] --
-ClickButton.MouseButton1Click:Connect(function()
-    _G.AutoFarm = not _G.AutoFarm
-    ClickButton.Text = "AUTO FARM: " .. (_G.AutoFarm and "ON" or "OFF")
-    ClickButton.BackgroundColor3 = _G.AutoFarm and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(40, 40, 40)
-    
-    if _G.AutoFarm then
-        -- LOOP 1: QUEST & FLY & BRING MOB
-        task.spawn(function()
-            while _G.AutoFarm do
-                pcall(function()
-                    local qGui = LocalPlayer.PlayerGui.Main.Quest
-                    if not qGui.Visible then
-                        local qName, qId, npcName = GetQuestData()
-                        local targetNPC = workspace.NPCs:FindFirstChild(npcName) or workspace:FindFirstChild(npcName)
-                        if targetNPC then
-                            TweenTo(targetNPC.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3))
-                            task.wait(0.5)
-                            CommF:InvokeServer("StartQuest", qName, qId)
-                        end
-                    else
-                        local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-                        for _, v in pairs(workspace.Enemies:GetChildren()) do
-                            if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                                -- FLY: Tetap di atas musuh pertama yang ditemukan
-                                LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 20, 0)
-                                
-                                -- BRING MOB: Tarik semua musuh dalam jarak 300 ke posisi musuh yang kita incar
-                                if (v.HumanoidRootPart.Position - myPos).Magnitude < 300 then
-                                    v.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, -20, 0)
-                                    v.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
-                                    v.Humanoid.PlatformStand = true -- Supaya musuh tidak gerak/jatuh
-                                    if v:FindFirstChild("HumanoidRootPart") then v.HumanoidRootPart.CanCollide = false end
-                                end
-                            end
-                        end
-                    end
-                end)
-                task.wait()
-            end
-        end)
-
-        -- LOOP 2: AUTO ATTACK SIGMA
-        task.spawn(function()
-            while _G.AutoFarm do
-                RunService.Heartbeat:Wait()
-                pcall(function()
-                    local targets = {}
-                    for _, v in pairs(workspace.Enemies:GetChildren()) do
-                        if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                            if (v.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude < 100 then
-                                table.insert(targets, v)
-                            end
-                        end
-                    end
-                    if #targets > 0 then
-                        RegisterAttack:FireServer(0)
-                        local hitArgs = {nil, {}}
-                        for i, v in pairs(targets) do
-                            if not hitArgs then hitArgs = v.HumanoidRootPart end
-                            hitArgs[i] = {v, v.HumanoidRootPart}
-                        end
-                        RegisterHit:FireServer(unpack(hitArgs))
-                    end
-                end)
-            end
-        end)
-    end
+local Success, Result = pcall(function()
+    return game:HttpGet(Url, true, {
+        ["Authorization"] = "token " .. GITHUB_TOKEN,
+        ["Accept"] = "application/vnd.github.v3.raw"
+    })
 end)
 
-print("⚡ YUTA HUB: AUTO FARM + BRING MOB READY ⚡")
+if Success and Result then
+    local ExecuteScript, Error = loadstring(Result)
+    if ExecuteScript then
+        ExecuteScript()
+    else
+        warn("[YutaHub] Gagal menyusun struktur kode: " .. tostring(Error))
+    end
+else
+    warn("[YutaHub] Gagal terhubung. Pastikan repositori '" .. REPO_NAME .. "' sudah di-Private.")
+end
