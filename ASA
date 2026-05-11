@@ -1,14 +1,28 @@
--- [[ 0. PERLINDUNGAN LOADING ANTI-CRASH ]] --
-if not game:IsLoaded() then game.Loaded:Wait() end
-
--- [[ 1. KONFIGURASI CHEAT ]] --
+-- [[ 1. CONFIGURATION & COLOR DESIGN ]] --
 local Config = {
-    Aimbot_Type = "Silent Aim",
-    Show_FOV = true,
-    FOV_Radius = 150,
-    Wallbang_Enabled = true,
-    ESP_Enabled = true,
-    UI_Color = Color3.fromRGB(255, 0, 50)
+    CorrectKey = "YUTAHUB",
+    KeyURL = "discord.gg/JQ7dZAVTDW",
+    Version = "V1.74-MOBILE_PC",
+    
+    -- Status Fitur (Kondisi Awal)
+    ESP_Enabled = false,
+    Aimbot_Type = "Off", -- "Off", "Auto-Lock", "Silent Aim"
+    Show_FOV = false,
+    FOV_Radius = 100, 
+    Aimbot_Smoothness = 0.15, -- Kehalusan lock di HP (0.05 - 1)
+    Hitbox_Enabled = false,
+    Hitbox_Size = 15,
+    
+    -- Tema Utama UI (Merah Neon Yuta)
+    UI_Color = Color3.fromRGB(255, 0, 50) 
+}
+
+-- Pengaturan Variabel Engine ESP (BORDER PUTIH + KOSONG DALAM)
+local Settings = {
+    BoxColor = Color3.fromRGB(255, 255, 255), 
+    TextColor = Color3.fromRGB(255, 255, 255), 
+    HealthBar = true,
+    Distance = true
 }
 
 local Players = game:GetService("Players")
@@ -16,238 +30,800 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local PlayerMouse = LocalPlayer:GetMouse()
+local CoreGui = game:GetService("CoreGui") -- Mengganti PlayerGui ke CoreGui
 
--- Penentuan Lokasi GUI (Aman untuk Mobile & PC Executor)
-local TargetGuiParent = game:GetService("CoreGui")
-local success, _ = pcall(function() local a = game:GetService("CoreGui").Name end)
-if not success then
-    TargetGuiParent = LocalPlayer:WaitForChild("PlayerGui")
+if CoreGui:FindFirstChild("YutaHub_Premium") then 
+    CoreGui.YutaHub_Premium:Destroy() 
 end
 
--- Bersihkan UI duplikat lama
-if TargetGuiParent:FindFirstChild("Yuta_Test_Hub") then 
-    TargetGuiParent.Yuta_Test_Hub:Destroy() 
-end
-
--- [[ 2. PEMBUATAN UI MINIMALIS (GUARANTEED SPAWN) ]] --
+-- [[ 2. MAIN UNIVERSAL UI DESIGN ]] --
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Yuta_Test_Hub"
+ScreenGui.Name = "YutaHub_Premium"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = TargetGuiParent
+ScreenGui.Parent = CoreGui -- Memasukkan UI ke dalam CoreGui agar tidak terhapus game
 
+-- TOMBOL BULAT KECIL (MINIMIZE LOGO)
+local ToggleIcon = Instance.new("TextButton", ScreenGui)
+ToggleIcon.Size = UDim2.new(0, 45, 0, 45)
+ToggleIcon.Position = UDim2.new(0, 15, 0, 150)
+ToggleIcon.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ToggleIcon.Text = "Y"
+ToggleIcon.TextColor3 = Config.UI_Color
+ToggleIcon.Font = Enum.Font.GothamBold
+ToggleIcon.TextSize = 18
+ToggleIcon.Visible = false
+ToggleIcon.Active = true
+ToggleIcon.Draggable = true 
+Instance.new("UICorner", ToggleIcon).CornerRadius = UDim.new(1, 0)
+local ToggleStroke = Instance.new("UIStroke", ToggleIcon)
+ToggleStroke.Color = Config.UI_Color
+ToggleStroke.Thickness = 1.5
+
+-- KOTAK CANVAS KEY SYSTEM
+local KeyFrame = Instance.new("Frame", ScreenGui)
+KeyFrame.Size = UDim2.new(0, 340, 0, 180)
+KeyFrame.Position = UDim2.new(0.5, -170, 0.5, -90)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+KeyFrame.Active = true      
+KeyFrame.Draggable = true   
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 8)
+local KeyStroke = Instance.new("UIStroke", KeyFrame)
+KeyStroke.Color = Config.UI_Color
+KeyStroke.Thickness = 1.5
+
+local KeyTitle = Instance.new("TextLabel", KeyFrame)
+KeyTitle.Size = UDim2.new(1, 0, 0, 45)
+KeyTitle.Text = "YUTA HUB | KEY SYSTEM " .. Config.Version
+KeyTitle.TextColor3 = Color3.new(1,1,1)
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.TextSize = 13
+KeyTitle.BackgroundTransparency = 1
+
+local KeyInput = Instance.new("TextBox", KeyFrame)
+KeyInput.Size = UDim2.new(0, 280, 0, 35)
+KeyInput.Position = UDim2.new(0.5, -140, 0.4, 0)
+KeyInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+KeyInput.PlaceholderText = "Masukkan Kunci..."
+KeyInput.Text = ""
+KeyInput.TextColor3 = Color3.new(1,1,1)
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.TextSize = 14
+Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
+
+local CheckBtn = Instance.new("TextButton", KeyFrame)
+CheckBtn.Size = UDim2.new(0, 135, 0, 35)
+CheckBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
+CheckBtn.Text = "CHECK KEY"
+CheckBtn.BackgroundColor3 = Config.UI_Color
+CheckBtn.TextColor3 = Color3.new(1,1,1)
+CheckBtn.Font = Enum.Font.GothamBold
+CheckBtn.TextSize = 14
+Instance.new("UICorner", CheckBtn).CornerRadius = UDim.new(0, 6)
+
+local GetBtn = Instance.new("TextButton", KeyFrame)
+GetBtn.Size = UDim2.new(0, 135, 0, 35)
+GetBtn.Position = UDim2.new(0.55, 0, 0.7, 0)
+GetBtn.Text = "GET KEY"
+GetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+GetBtn.TextColor3 = Color3.new(1,1,1)
+GetBtn.Font = Enum.Font.GothamBold
+GetBtn.TextSize = 14
+Instance.new("UICorner", GetBtn).CornerRadius = UDim.new(0, 6)
+
+-- KOTAK CANVAS MENU UTAMA
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 250, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -130)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+MainFrame.Size = UDim2.new(0, 450, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -145)
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+MainFrame.Visible = false 
+MainFrame.Active = true      
+MainFrame.Draggable = true   
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Config.UI_Color
 MainStroke.Thickness = 1.5
 
-local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "YUTA TESTING HUB"
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
-Title.BackgroundTransparency = 1
+local MainTitle = Instance.new("TextLabel", MainFrame)
+MainTitle.Size = UDim2.new(1, -20, 0, 40)
+MainTitle.Position = UDim2.new(0, 15, 0, 5)
+MainTitle.Text = "YUTA HUB PREMIUM MENU"
+MainTitle.TextColor3 = Color3.new(1,1,1)
+MainTitle.Font = Enum.Font.GothamBold
+MainTitle.TextSize = 16
+MainTitle.TextXAlignment = Enum.TextXAlignment.Left
+MainTitle.BackgroundTransparency = 1
 
--- Fungsi Geser UI Modern
-local function MakeDraggable(Frame)
-    local Dragging, DragInput, DragStart, StartPosition
-    Frame.InputBegan:Connect(function(input)
+-- SISI KIRI: PANEL NAVIGASI TAB
+local TabPanel = Instance.new("Frame", MainFrame)
+TabPanel.Size = UDim2.new(0, 110, 1, -60)
+TabPanel.Position = UDim2.new(0, 10, 0, 50)
+TabPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Instance.new("UICorner", TabPanel).CornerRadius = UDim.new(0, 6)
+
+-- SISI KANAN: PANEL WADAH KONTEN (CONTAINER)
+local Container = Instance.new("Frame", MainFrame)
+Container.Size = UDim2.new(1, -140, 1, -60)
+Container.Position = UDim2.new(0, 130, 0, 50)
+Container.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 6)
+
+-- FOLDER HALAMAN (PAGE WADAH SEKARANG BISA DI-SCROLL)
+local TabPages = {}
+local function CreatePage(name)
+    local Page = Instance.new("ScrollingFrame", Container)
+    Page.Size = UDim2.new(1, 0, 1, 0)
+    Page.BackgroundTransparency = 1
+    Page.Visible = false
+    
+    -- Pengaturan Batang Scroll Otomatis (Merah Neon Yuta)
+    Page.ScrollBarThickness = 3
+    Page.ScrollBarImageColor3 = Config.UI_Color
+    Page.CanvasSize = UDim2.new(0, 0, 0, 360) -- Mengatur batas panjang gulir ke bawah
+    
+    TabPages[name] = Page
+    return Page
+end
+local PageMain = CreatePage("Main")
+local PageESP = CreatePage("ESP")
+local PageMisc = CreatePage("Misc")
+
+-- ==========================================
+-- ISI KONTEN TAB MAIN: INTERACTIVE COMBAT
+-- ==========================================
+local AimbotToggle = Instance.new("TextButton", PageMain)
+AimbotToggle.Size = UDim2.new(1, -20, 0, 38)
+AimbotToggle.Position = UDim2.new(0, 10, 0, 15)
+AimbotToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+AimbotToggle.Text = "AIMBOT MODE: OFF"
+AimbotToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+AimbotToggle.Font = Enum.Font.GothamBold
+AimbotToggle.TextSize = 12
+Instance.new("UICorner", AimbotToggle).CornerRadius = UDim.new(0, 6)
+local AimStroke = Instance.new("UIStroke", AimbotToggle)
+AimStroke.Color = Color3.fromRGB(50, 50, 50)
+AimStroke.Thickness = 1.5
+
+local FOVToggle = Instance.new("TextButton", PageMain)
+FOVToggle.Size = UDim2.new(1, -20, 0, 38)
+FOVToggle.Position = UDim2.new(0, 10, 0, 63)
+FOVToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+FOVToggle.Text = "SHOW FOV CIRCLE: OFF"
+FOVToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+FOVToggle.Font = Enum.Font.GothamBold
+FOVToggle.TextSize = 12
+Instance.new("UICorner", FOVToggle).CornerRadius = UDim.new(0, 6)
+local FOVStroke = Instance.new("UIStroke", FOVToggle)
+FOVStroke.Color = Color3.fromRGB(50, 50, 50)
+FOVStroke.Thickness = 1.5
+
+-- [1] SLIDER PENGATUR BULATAN FOV
+local SliderFrame = Instance.new("Frame", PageMain)
+SliderFrame.Size = UDim2.new(1, -20, 0, 50)
+SliderFrame.Position = UDim2.new(0, 10, 0, 115)
+SliderFrame.BackgroundTransparency = 1
+
+local SliderTitle = Instance.new("TextLabel", SliderFrame)
+SliderTitle.Size = UDim2.new(1, 0, 0, 20)
+SliderTitle.Text = "FOV SIZE: " .. tostring(Config.FOV_Radius)
+SliderTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+SliderTitle.Font = Enum.Font.GothamBold
+SliderTitle.TextSize = 11
+SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
+SliderTitle.BackgroundTransparency = 1
+
+local SliderBackground = Instance.new("Frame", SliderFrame)
+SliderBackground.Size = UDim2.new(1, 0, 0, 8)
+SliderBackground.Position = UDim2.new(0, 0, 0, 25)
+SliderBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", SliderBackground).CornerRadius = UDim.new(1, 0)
+
+local SliderBar = Instance.new("Frame", SliderBackground)
+SliderBar.Size = UDim2.new(0.25, 0, 1, 0)
+SliderBar.BackgroundColor3 = Config.UI_Color
+Instance.new("UICorner", SliderBar).CornerRadius = UDim.new(1, 0)
+
+local SliderButton = Instance.new("TextButton", SliderBackground)
+SliderButton.Size = UDim2.new(0, 16, 0, 16)
+SliderButton.Position = UDim2.new(0.25, -8, 0.5, -8)
+SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SliderButton.Text = ""
+Instance.new("UICorner", SliderButton).CornerRadius = UDim.new(1, 0)
+
+-- Mekanika Seret Slider FOV (Mobile & PC)
+local function AktifkanSliderFOV()
+    local Draggable = false
+    SliderButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            Dragging = true; DragStart = input.Position; StartPosition = Frame.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then Dragging = false end end)
+            Draggable = true
         end
     end)
-    Frame.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then DragInput = input end end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Draggable = false
+        end
+    end)
     UserInputService.InputChanged:Connect(function(input)
-        if input == DragInput and Dragging then
-            local Delta = input.Position - DragStart
-            Frame.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+        if Draggable and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local RentangX = math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1)
+            SliderBar.Size = UDim2.new(RentangX, 0, 1, 0)
+            SliderButton.Position = UDim2.new(RentangX, -8, 0.5, -8)
+            
+            local NilaiBaru = math.round(10 + (RentangX * 390)) -- Jangkauan FOV: 10 - 400
+            Config.FOV_Radius = NilaiBaru
+            SliderTitle.Text = "FOV SIZE: " .. tostring(NilaiBaru)
         end
     end)
 end
-MakeDraggable(MainFrame)
+AktifkanSliderFOV()
 
--- Fungsi Pembuatan Tombol Fitur
-local function CreateToggle(name, pos, default, callback)
-    local Btn = Instance.new("TextButton", MainFrame)
-    Btn.Size = UDim2.new(1, -20, 0, 35)
-    Btn.Position = UDim2.new(0, 10, 0, pos)
-    Btn.BackgroundColor3 = default and Config.UI_Color or Color3.fromRGB(30, 30, 30)
-    Btn.Text = name .. ": " .. (default and "ON" or "OFF")
-    Btn.TextColor3 = Color3.new(1, 1, 1)
-    Btn.Font = Enum.Font.GothamBold
-    Btn.TextSize = 12
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-    
-    local state = default
-    Btn.MouseButton1Click:Connect(function()
-        state = not state
-        Btn.Text = name .. ": " .. (state and "ON" or "OFF")
-        Btn.BackgroundColor3 = state and Config.UI_Color or Color3.fromRGB(30, 30, 30)
-        callback(state)
-    end)
-end
+-- [2] TOMBOL UTAMA HITBOX EXPANDER
+local HitboxToggle = Instance.new("TextButton", PageMain)
+HitboxToggle.Size = UDim2.new(1, -20, 0, 38)
+HitboxToggle.Position = UDim2.new(0, 10, 0, 175)
+HitboxToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+HitboxToggle.Text = "HITBOX EXPANDER: OFF"
+HitboxToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+HitboxToggle.Font = Enum.Font.GothamBold
+HitboxToggle.TextSize = 12
+Instance.new("UICorner", HitboxToggle).CornerRadius = UDim.new(0, 6)
+local HitboxStroke = Instance.new("UIStroke", HitboxToggle)
+HitboxStroke.Color = Color3.fromRGB(50, 50, 50)
+HitboxStroke.Thickness = 1.5
 
-CreateToggle("SILENT AIM", 50, true, function(v) Config.Aimbot_Type = v and "Silent Aim" or "Off" end)
-CreateToggle("SHOW FOV CIRCLE", 95, true, function(v) Config.Show_FOV = v end)
-CreateToggle("WALLBANG", 140, true, function(v) Config.Wallbang_Enabled = v end)
-CreateToggle("ESP PLAYER", 185, true, function(v) Config.ESP_Enabled = v end)
+-- [3] SLIDER PENGATUR UKURAN HITBOX 
+local HitboxSliderFrame = Instance.new("Frame", PageMain)
+HitboxSliderFrame.Size = UDim2.new(1, -20, 0, 50)
+HitboxSliderFrame.Position = UDim2.new(0, 10, 0, 225)
+HitboxSliderFrame.BackgroundTransparency = 1
 
--- [[ 3. LINGKARAN FOV VISUAL ]] --
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Color = Config.UI_Color
-FOVCircle.Thickness = 1.5
-FOVCircle.NumSides = 64
-FOVCircle.Filled = false
+local HitboxSliderTitle = Instance.new("TextLabel", HitboxSliderFrame)
+HitboxSliderTitle.Size = UDim2.new(1, 0, 0, 20)
+HitboxSliderTitle.Text = "HITBOX SIZE: " .. tostring(Config.Hitbox_Size)
+HitboxSliderTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+HitboxSliderTitle.Font = Enum.Font.GothamBold
+HitboxSliderTitle.TextSize = 11
+HitboxSliderTitle.TextXAlignment = Enum.TextXAlignment.Left
+HitboxSliderTitle.BackgroundTransparency = 1
 
-RunService.RenderStepped:Connect(function()
-    FOVCircle.Visible = Config.Show_FOV
-    FOVCircle.Radius = Config.FOV_Radius
-    FOVCircle.Position = UserInputService:GetMouseLocation()
-end)
+local HitboxSliderBg = Instance.new("Frame", HitboxSliderFrame)
+HitboxSliderBg.Size = UDim2.new(1, 0, 0, 8)
+HitboxSliderBg.Position = UDim2.new(0, 0, 0, 25)
+HitboxSliderBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", HitboxSliderBg).CornerRadius = UDim.new(1, 0)
 
--- [[ 4. LOGIKA TARGET TERDEKAT ]] --
-local function GetClosestPlayer()
-    local MaximumDistance = Config.FOV_Radius
-    local Target = nil
-    
-    for _, v in ipairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChildOfClass("Humanoid") and v.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-            local ScreenPoint, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-            if OnScreen then
-                local MousePos = UserInputService:GetMouseLocation()
-                local VectorDistance = (Vector2.new(ScreenPoint.X, ScreenPoint.Y) - MousePos).Magnitude
-                if VectorDistance < MaximumDistance then
-                    MaximumDistance = VectorDistance
-                    Target = v
+local HitboxSliderBar = Instance.new("Frame", HitboxSliderBg)
+HitboxSliderBar.Size = UDim2.new(0.4, 0, 1, 0)
+HitboxSliderBar.BackgroundColor3 = Config.UI_Color
+Instance.new("UICorner", HitboxSliderBar).CornerRadius = UDim.new(1, 0)
+
+local HitboxSliderBtn = Instance.new("TextButton", HitboxSliderBg)
+HitboxSliderBtn.Size = UDim2.new(0, 16, 0, 16)
+HitboxSliderBtn.Position = UDim2.new(0.4, -8, 0.5, -8)
+HitboxSliderBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+HitboxSliderBtn.Text = ""
+Instance.new("UICorner", HitboxSliderBtn).CornerRadius = UDim.new(1, 0)
+
+-- Fungsi Sinkronisasi Fisik Karakter Musuh
+local function UpdateHitboxes()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local root = player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                if Config.Hitbox_Enabled then
+                    root.Size = Vector3.new(Config.Hitbox_Size, Config.Hitbox_Size, Config.Hitbox_Size)
+                    root.Transparency = 0.7
+                    root.BrickColor = BrickColor.new("Really red")
+                    root.Material = Enum.Material.Neon
+                    root.CanCollide = false
+                else
+                    root.Size = Vector3.new(2, 2, 1)
+                    root.Transparency = 1
+                    root.BrickColor = BrickColor.new("Medium stone grey")
+                    root.Material = Enum.Material.Plastic
+                    root.CanCollide = true
                 end
             end
         end
     end
-    return Target
 end
 
--- [[ 5. CORE ENGINE ESP ]] --
-local function BuildESP(TargetPlayer)
-    local Box = Drawing.new("Square")
-    Box.Visible = false
-    Box.Color = Color3.fromRGB(255, 255, 255)
-    Box.Thickness = 1
-    Box.Filled = false
+-- Mekanika Seret Slider Hitbox (Mobile & PC)
+local function AktifkanSliderHitbox()
+    local Draggable = false
+    HitboxSliderBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Draggable = true
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Draggable = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if Draggable and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local RentangX = math.clamp((input.Position.X - HitboxSliderBg.AbsolutePosition.X) / HitboxSliderBg.AbsoluteSize.X, 0, 1)
+            HitboxSliderBar.Size = UDim2.new(RentangX, 0, 1, 0)
+            HitboxSliderBtn.Position = UDim2.new(RentangX, -8, 0.5, -8)
+            
+            local NilaiBaru = math.round(2 + (RentangX * 28)) -- Jangkauan Hitbox: 2 - 30
+            Config.Hitbox_Size = NilaiBaru
+            HitboxSliderTitle.Text = "HITBOX SIZE: " .. tostring(NilaiBaru)
+            if Config.Hitbox_Enabled then UpdateHitboxes() end
+        end
+    end)
+end
+AktifkanSliderHitbox()
 
-    local HealthBar = Drawing.new("Square")
-    HealthBar.Visible = false
-    HealthBar.Color = Color3.fromRGB(0, 255, 0)
-    HealthBar.Thickness = 1
-    HealthBar.Filled = true
+-- Sistem Pemicu Tombol Hitbox
+HitboxToggle.MouseButton1Click:Connect(function()
+    Config.Hitbox_Enabled = not Config.Hitbox_Enabled
+    if Config.Hitbox_Enabled then
+        HitboxToggle.Text = "HITBOX EXPANDER: ON"
+        HitboxToggle.BackgroundColor3 = Config.UI_Color
+        HitboxToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    else
+        HitboxToggle.Text = "HITBOX EXPANDER: OFF"
+        HitboxToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        HitboxToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+    UpdateHitboxes()
+end)
 
-    local Connection
-    Connection = RunService.RenderStepped:Connect(function()
-        if Config.ESP_Enabled and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-            local RootPart = TargetPlayer.Character.HumanoidRootPart
-            local Humanoid = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
-            local Position, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+-- Loop Konstan Mengunci Ukuran Pemain yang Baru Muncul
+RunService.RenderStepped:Connect(function()
+    if Config.Hitbox_Enabled then
+        UpdateHitboxes()
+    end
+end)
 
-            if OnScreen then
-                local Scale = 1 / (Position.Z * math.tan(math.rad(Camera.FieldOfView / 2))) * 1000
-                local BoxX = Position.X - (Scale / 2)
-                local BoxY = Position.Y - (Scale / 2)
+-- ==========================================
+-- FOOTER TEXT INFORMASI BAWAH MENU2222
+-- ==========================================
+local CustomText = Instance.new("TextLabel", PageMain)
+CustomText.Size = UDim2.new(1, -20, 0, 40)
+CustomText.Position = UDim2.new(0, 10, 0, 285)
+CustomText.Text = "Mobile & PC Adaptive Combat System\nLock: Autolock Head on Left-Click (PC) / Touchscreen Shoot (HP)\nSilent: Bullets redirect to target UpperTorso"
+CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
+CustomText.Font = Enum.Font.Gotham
+CustomText.TextSize = 10
+CustomText.BackgroundTransparency = 1
 
-                Box.Size = Vector2.new(Scale, Scale)
-                Box.Position = Vector2.new(BoxX, BoxY)
-                Box.Visible = true
+-- =======================================================
+-- TOMBOL WALLBANG (TEMBUS DINDING) - BARU
+-- =======================================================
+if Config.Wallbang_Enabled == nil then Config.Wallbang_Enabled = false end
 
-                local HealthPercentage = Humanoid.Health / Humanoid.MaxHealth
-                HealthBar.Size = Vector2.new(3, Scale * HealthPercentage)
-                HealthBar.Position = Vector2.new(BoxX - 6, BoxY + (Scale - (Scale * HealthPercentage)))
-                HealthBar.Color = Color3.fromRGB(255 - (255 * HealthPercentage), 255 * HealthPercentage, 0)
-                HealthBar.Visible = true
-            else
-                Box.Visible = false
-                HealthBar.Visible = false
+local WallbangToggle = Instance.new("TextButton", PageMain)
+WallbangToggle.Size = UDim2.new(1, -20, 0, 38)
+WallbangToggle.Position = UDim2.new(0, 10, 0, 285) -- Dipasang rapi di bawah Slider Hitbox
+WallbangToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+WallbangToggle.Text = "WALLBANG MODE: OFF"
+WallbangToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+WallbangToggle.Font = Enum.Font.GothamBold
+WallbangToggle.TextSize = 12
+Instance.new("UICorner", WallbangToggle).CornerRadius = UDim.new(0, 6)
+
+local WallbangStroke = Instance.new("UIStroke", WallbangToggle)
+WallbangStroke.Color = Color3.fromRGB(50, 50, 50)
+WallbangStroke.Thickness = 1.5
+
+WallbangToggle.MouseButton1Click:Connect(function()
+    Config.Wallbang_Enabled = not Config.Wallbang_Enabled
+    if Config.Wallbang_Enabled then
+        WallbangToggle.Text = "WALLBANG MODE: ON"
+        WallbangToggle.BackgroundColor3 = Config.UI_Color
+        WallbangToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    else
+        WallbangToggle.Text = "WALLBANG MODE: OFF"
+        WallbangToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        WallbangToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+end)
+
+-- ==========================================
+-- FOOTER TEXT INFORMASI 22222
+-- ==========================================
+local CustomText = Instance.new("TextLabel", PageMain)
+CustomText.Size = UDim2.new(1, -20, 0, 40)
+CustomText.Position = UDim2.new(0, 10, 0, 335) -- Menggeser footer ke area terbawah agar pas dengan scroll canvas
+CustomText.Text = "Mobile & PC Adaptive Combat System\nLock: Autolock Head on Left-Click (PC) / Touchscreen Shoot (HP)\nSilent: Bullets redirect to target UpperTorso"
+CustomText.TextColor3 = Color3.fromRGB(130, 130, 130)
+CustomText.Font = Enum.Font.Gotham
+CustomText.TextSize = 10
+CustomText.BackgroundTransparency = 1
+
+-- ISI KONTEN TAB MISC
+local SpeedConfig = {
+    Enabled = false,
+    Value = 16
+}
+
+-- 1. TOMBOL TOGGLE (ON/OFF)
+local SpeedToggle = Instance.new("TextButton", PageMisc)
+SpeedToggle.Size = UDim2.new(1, -20, 0, 38)
+SpeedToggle.Position = UDim2.new(0, 10, 0, 15)
+SpeedToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SpeedToggle.Text = "SPEED HACK: OFF"
+SpeedToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+SpeedToggle.Font = Enum.Font.GothamBold
+SpeedToggle.TextSize = 12
+Instance.new("UICorner", SpeedToggle).CornerRadius = UDim.new(0, 6)
+local SpeedStroke = Instance.new("UIStroke", SpeedToggle)
+SpeedStroke.Color = Color3.fromRGB(50, 50, 50)
+SpeedStroke.Thickness = 1.5
+
+-- 2. WADAH SLIDER SPEED
+local M_SliderFrame = Instance.new("Frame", PageMisc)
+M_SliderFrame.Size = UDim2.new(1, -20, 0, 50)
+M_SliderFrame.Position = UDim2.new(0, 10, 0, 65)
+M_SliderFrame.BackgroundTransparency = 1
+
+local M_SliderTitle = Instance.new("TextLabel", M_SliderFrame)
+M_SliderTitle.Size = UDim2.new(1, 0, 0, 20)
+M_SliderTitle.Text = "WALK SPEED SIZE: 16"
+M_SliderTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+M_SliderTitle.Font = Enum.Font.GothamBold
+M_SliderTitle.TextSize = 11
+M_SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
+M_SliderTitle.BackgroundTransparency = 1
+
+local M_SliderBackground = Instance.new("Frame", M_SliderFrame)
+M_SliderBackground.Size = UDim2.new(1, 0, 0, 8)
+M_SliderBackground.Position = UDim2.new(0, 0, 0, 25)
+M_SliderBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", M_SliderBackground).CornerRadius = UDim.new(1, 0)
+
+local M_SliderBar = Instance.new("Frame", M_SliderBackground)
+M_SliderBar.Size = UDim2.new(0, 0, 1, 0)
+M_SliderBar.BackgroundColor3 = Config.UI_Color
+Instance.new("UICorner", M_SliderBar).CornerRadius = UDim.new(1, 0)
+
+local M_SliderButton = Instance.new("TextButton", M_SliderBackground)
+M_SliderButton.Size = UDim2.new(0, 16, 0, 16)
+M_SliderButton.Position = UDim2.new(0, -8, 0.5, -8)
+M_SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+M_SliderButton.Text = ""
+Instance.new("UICorner", M_SliderButton).CornerRadius = UDim.new(1, 0)
+
+-- ==========================================
+-- LOGIKA INTERAKSI & SAKELAR BYPASS
+-- ==========================================
+
+-- Fungsi klik Tombol Sakelar Speed
+SpeedToggle.MouseButton1Click:Connect(function()
+    SpeedConfig.Enabled = not SpeedConfig.Enabled
+    if SpeedConfig.Enabled then
+        SpeedToggle.Text = "SPEED HACK: ON"
+        SpeedToggle.BackgroundColor3 = Color3.fromRGB(0, 40, 20)
+        SpeedStroke.Color = Color3.fromRGB(0, 255, 100)
+    else
+        SpeedToggle.Text = "SPEED HACK: OFF"
+        SpeedToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        SpeedStroke.Color = Color3.fromRGB(50, 50, 50)
+        -- Kembalikan kecepatan ke normal saat dimatikan
+        pcall(function()
+            local Char = LocalPlayer.Character
+            if Char and Char:FindFirstChildOfClass("Humanoid") then
+                Char:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
             end
+        end)
+    end
+end)
+
+-- Fungsi Geser Batang Slider Speed
+local function UpdateSpeedSlider()
+    local percentage = math.clamp((UserInputService:GetMouseLocation().X - M_SliderBackground.AbsolutePosition.X) / M_SliderBackground.AbsoluteSize.X, 0, 1)
+    local rawValue = math.floor(16 + (percentage * 134)) -- Rentang nilai 16 - 150
+    SpeedConfig.Value = rawValue
+    
+    M_SliderTitle.Text = "WALK SPEED SIZE: " .. tostring(rawValue)
+    M_SliderBar.Size = UDim2.new(percentage, 0, 1, 0)
+    M_SliderButton.Position = UDim2.new(percentage, -8, 0.5, -8)
+end
+
+local M_Dragging = false
+M_SliderButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        M_Dragging = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        M_Dragging = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if M_Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        UpdateSpeedSlider()
+    end
+end)
+
+-- Sistem Pengunci Otomatis agar Speed tidak kembali ke 16 saat melompat/berjalan
+RunService.Stepped:Connect(function()
+    if SpeedConfig.Enabled then
+        pcall(function()
+            local Char = LocalPlayer.Character
+            if Char and Char:FindFirstChildOfClass("Humanoid") then
+                Char:FindFirstChildOfClass("Humanoid").WalkSpeed = SpeedConfig.Value
+            end
+        end)
+    end
+end)
+
+-- ==========================================
+-- TAMBAHAN FITUR: FLY HACK PREMIUM ENGINE
+-- ==========================================
+local FlyConfig = {
+    Enabled = false,
+    Value = 50 -- Kecepatan terbang awal
+}
+
+local FlyingConn = nil
+local BodyVelocity = nil
+local BodyGyro = nil
+
+-- 1. TOMBOL TOGGLE FLY (ON/OFF)
+local FlyToggle = Instance.new("TextButton", PageMisc)
+FlyToggle.Size = UDim2.new(1, -20, 0, 38)
+FlyToggle.Position = UDim2.new(0, 10, 0, 130) -- Posisi di bawah Slider Speed
+FlyToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+FlyToggle.Text = "FLY HACK: OFF"
+FlyToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+FlyToggle.Font = Enum.Font.GothamBold
+FlyToggle.TextSize = 12
+Instance.new("UICorner", FlyToggle).CornerRadius = UDim.new(0, 6)
+local FlyStroke = Instance.new("UIStroke", FlyToggle)
+FlyStroke.Color = Color3.fromRGB(50, 50, 50)
+FlyStroke.Thickness = 1.5
+
+-- 2. WADAH SLIDER FLY SPEED
+local F_SliderFrame = Instance.new("Frame", PageMisc)
+F_SliderFrame.Size = UDim2.new(1, -20, 0, 50)
+F_SliderFrame.Position = UDim2.new(0, 10, 0, 180)
+F_SliderFrame.BackgroundTransparency = 1
+
+local F_SliderTitle = Instance.new("TextLabel", F_SliderFrame)
+F_SliderTitle.Size = UDim2.new(1, 0, 0, 20)
+F_SliderTitle.Text = "FLY SPEED SIZE: 50"
+F_SliderTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+F_SliderTitle.Font = Enum.Font.GothamBold
+F_SliderTitle.TextSize = 11
+F_SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
+F_SliderTitle.BackgroundTransparency = 1
+
+local F_SliderBackground = Instance.new("Frame", F_SliderFrame)
+F_SliderBackground.Size = UDim2.new(1, 0, 0, 8)
+F_SliderBackground.Position = UDim2.new(0, 0, 0, 25)
+F_SliderBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", F_SliderBackground).CornerRadius = UDim.new(1, 0)
+
+local F_SliderBar = Instance.new("Frame", F_SliderBackground)
+F_SliderBar.Size = UDim2.new(0.25, 0, 1, 0) -- Default posisi 50
+F_SliderBar.BackgroundColor3 = Config.UI_Color
+Instance.new("UICorner", F_SliderBar).CornerRadius = UDim.new(1, 0)
+
+local F_SliderButton = Instance.new("TextButton", F_SliderBackground)
+F_SliderButton.Size = UDim2.new(0, 16, 0, 16)
+F_SliderButton.Position = UDim2.new(0.25, -8, 0.5, -8)
+F_SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+F_SliderButton.Text = ""
+Instance.new("UICorner", F_SliderButton).CornerRadius = UDim.new(1, 0)
+
+-- ==========================================
+-- LOGIKA AKSI TERBANG (FLY CORE LOGIC)
+-- ==========================================
+
+local function CleanFly()
+    if FlyingConn then FlyingConn:Disconnect() FlyingConn = nil end
+    if BodyVelocity then BodyVelocity:Destroy() BodyVelocity = nil end
+    if BodyGyro then BodyGyro:Destroy() BodyGyro = nil end
+end
+
+local function StartFly()
+    CleanFly()
+    
+    local Character = LocalPlayer.Character
+    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+    if not RootPart then return end
+    
+    -- Struktur instansi gaya untuk menahan gravitasi roblox
+    BodyVelocity = Instance.new("BodyVelocity")
+    BodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    BodyVelocity.Parent = RootPart
+    
+    BodyGyro = Instance.new("BodyGyro")
+    BodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    BodyGyro.CFrame = Camera.CFrame
+    BodyGyro.Parent = RootPart
+    
+    -- Thread render konstan agar navigasi arah mengikuti pandangan kamera (PC & HP Mobile)
+    FlyingConn = RunService.RenderStepped:Connect(function()
+        if not FlyConfig.Enabled or not RootPart.Parent or not Character:FindFirstChild("Humanoid") then
+            CleanFly()
+            return
+        end
+        
+        BodyGyro.CFrame = Camera.CFrame
+        local MoveDirection = Character:FindFirstChild("Humanoid").MoveDirection
+        
+        -- Kalkulasi kecepatan terbang berdasarkan input joystick/WASD + arah kamera
+        if MoveDirection.Magnitude > 0 then
+            BodyVelocity.Velocity = Camera.CFrame:VectorToWorldSpace(Vector3.new(MoveDirection.X, 0, -MoveDirection.Z).Unit) * FlyConfig.Value
         else
-            Box.Visible = false
-            HealthBar.Visible = false
-            if not TargetPlayer or not TargetPlayer.Parent then
-                Box:Remove()
-                HealthBar:Remove()
-                Connection:Disconnect()
-            end
+            BodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
     end)
 end
 
-for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then BuildESP(p) end end
-Players.PlayerAdded:Connect(function(p) if p ~= LocalPlayer then BuildESP(p) end end)
+-- Fungsi Sakelar Fly Toggle
+FlyToggle.MouseButton1Click:Connect(function()
+    FlyConfig.Enabled = not FlyConfig.Enabled
+    if FlyConfig.Enabled then
+        FlyToggle.Text = "FLY HACK: ON"
+        FlyToggle.BackgroundColor3 = Color3.fromRGB(0, 40, 20)
+        FlyStroke.Color = Color3.fromRGB(0, 255, 100)
+        StartFly()
+    else
+        FlyToggle.Text = "FLY HACK: OFF"
+        FlyToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        FlyStroke.Color = Color3.fromRGB(50, 50, 50)
+        CleanFly()
+    end
+end)
 
--- [[ 6. HOOK METATABLE ENGINE ]] --
+-- Sinkronisasi ulang jika karakter hidup kembali setelah mati
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if FlyConfig.Enabled then StartFly() end
+end)
+
+-- Fungsi Geser Batang Slider Fly Speed
+local function UpdateFlySlider()
+    local percentage = math.clamp((UserInputService:GetMouseLocation().X - F_SliderBackground.AbsolutePosition.X) / F_SliderBackground.AbsoluteSize.X, 0, 1)
+    local rawValue = math.floor(10 + (percentage * 190)) -- Rentang kecepatan terbang: 10 - 200
+    FlyConfig.Value = rawValue
+    
+    F_SliderTitle.Text = "FLY SPEED SIZE: " .. tostring(rawValue)
+    F_SliderBar.Size = UDim2.new(percentage, 0, 1, 0)
+    F_SliderButton.Position = UDim2.new(percentage, -8, 0.5, -8)
+end
+
+local F_Dragging = false
+F_SliderButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        F_Dragging = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        F_Dragging = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if F_Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        UpdateFlySlider()
+    end
+end)
+
+-- SAKELAR DI DALAM TAB ESP
+local ESPToggle = Instance.new("TextButton", PageESP)
+ESPToggle.Size = UDim2.new(1, -20, 0, 45)
+ESPToggle.Position = UDim2.new(0, 10, 0, 20)
+ESPToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ESPToggle.Text = "ESP: OFF"
+ESPToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+ESPToggle.Font = Enum.Font.GothamBold
+ESPToggle.TextSize = 13
+Instance.new("UICorner", ESPToggle).CornerRadius = UDim.new(0, 6)
+local ESPStroke = Instance.new("UIStroke", ESPToggle)
+ESPStroke.Color = Color3.fromRGB(50, 50, 50)
+ESPStroke.Thickness = 1.5
+
+-- ==========================================
+-- [[ 3. ADAPTIVE MOBILE & PC COMBAT ENGINE ]] --
+-- ==========================================
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Thickness = 1.5
+FOVCircle.NumSides = 64
+FOVCircle.Radius = Config.FOV_Radius
+FOVCircle.Filled = false
+FOVCircle.Visible = false
+
+local function GetClosestPlayer()
+    local target = nil
+    local shortestDistance = math.huge
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+            if onScreen then
+                local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                if distance < shortestDistance and distance < Config.FOV_Radius then
+                    shortestDistance = distance
+                    target = player
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- DETEKSI CROSS-PLATFORM: PC (Klik Kiri) & HP Mobile (Touch Layar)
+local Attacking = false
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    -- Deteksi PC Klik Kiri ATAU HP Mobile Layar disentuh
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        Attacking = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        Attacking = false
+    end
+end)
+
+-- ==========================================
+-- [[ CORE BYPASS SILENT AIM UNIVERSAL  ]] --
+-- [[ HOOK SILENT AIM: MOUSE INDEX & RAYCAST + WALLBANG ]] --
+-- ==========================================
 local mt = getrawmetatable(game)
 local oldIndex = mt.__index
 local oldNamecall = mt.__namecall
 setreadonly(mt, false)
 
+-- 1. HOOK UNTUK GAME BERBASIS MOUSE (Game Klasik)
 mt.__index = newcclosure(function(self, index)
     if Config.Aimbot_Type == "Silent Aim" and not checkcaller() then
-        if self == PlayerMouse and (index == "Hit" or index == "Target") then
+        if self == Mouse and (index == "Hit" or index == "Target") then
             local target = GetClosestPlayer()
-            local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
-            if targetBody then
-                return index == "Hit" and targetBody.CFrame or targetBody
+            if target and target.Character and target.Character:FindFirstChild("UpperTorso") then
+                local targetBody = target.Character.UpperTorso
+                if index == "Hit" then
+                    return targetBody.CFrame
+                elseif index == "Target" then
+                    return targetBody
+                end
+            elseif target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                -- Backup jika game tidak memiliki struktur part UpperTorso
+                local targetBody = target.Character.HumanoidRootPart
+                if index == "Hit" then
+                    return targetBody.CFrame
+                elseif index == "Target" then
+                    return targetBody
+                end
             end
         end
     end
     return oldIndex(self, index)
 end)
 
+-- 2. HOOK UNTUK GAME BERBASIS RAYCAST ENGINE (Game Modern seperti Arsenal, Bedwars, dll)
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     local args = {...}
     
     if Config.Aimbot_Type == "Silent Aim" and not checkcaller() then
-        if method == "Raycast" and self == workspace then
+        -- Deteksi jika skrip game memanggil fungsi kalkulasi arah tembakan peluru
+        if method == "Raycast" or method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" then
             local target = GetClosestPlayer()
-            local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
-            
-            if targetBody then
-                local origin = args[2] -- Gunakan indeks array langsung untuk stabilitas parameter
-                args[3] = (targetBody.Position - origin).Unit * 1000
-                
-                if Config.Wallbang_Enabled then
-                    local params = args[4] or RaycastParams.new()
-                    params.FilterType = Enum.RaycastFilterType.Exclude
-                    local IgnoreList = {LocalPlayer.Character, workspace:FindFirstChild("Terrain")}
-                    for _, obj in ipairs(workspace:GetChildren()) do
-                        if obj.Name ~= "Players" and obj ~= target.Character then
-                            table.insert(IgnoreList, obj)
-                        end
+            if target and target.Character then
+                local targetBody = target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart")
+                if targetBody then
+                    -- Belokkan arah asal vektor asal peluru ke koordinat tubuh target musuh secara instan
+                    if method == "Raycast" then
+                        -- args[1] adalah Origin, args[2] adalah Direction (Arah)
+                        args[2] = (targetBody.Position - args[1]).Unit * 1000
+                    elseif method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" then
+                        -- args[1] adalah Ray structural instansi
+                        local origin = args[1].Origin
+                        args[1] = Ray.new(origin, (targetBody.Position - origin).Unit * 1000)
                     end
-                    params.FilterDescendantsInstances = IgnoreList
-                    args[4] = params
-                end
-            end
-            
-        elseif (method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList") and Config.Wallbang_Enabled then
-            local target = GetClosestPlayer()
-            local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
-            
-            if targetBody then
-                local origin = args[1].Origin
-                args[1] = Ray.new(origin, (targetBody.Position - origin).Unit * 1000)
-                
-                if method == "FindPartOnRayWithIgnoreList" then
-                    local IgnoreList = args[2] or {}
-                    for _, obj in ipairs(workspace:GetChildren()) do
-                        if obj.Name ~= "Players" and obj ~= target.Character then
-                            table.insert(IgnoreList, obj)
-                        end
-                    end
-                    args[2] = IgnoreList
                 end
             end
         end
@@ -258,3 +834,261 @@ mt.__namecall = newcclosure(function(self, ...)
 end)
 
 setreadonly(mt, true)
+
+-- Thread Pengendali Kamera Aimbot
+RunService.RenderStepped:Connect(function()
+    if Config.Show_FOV then
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        FOVCircle.Radius = Config.FOV_Radius
+        FOVCircle.Visible = true
+    else
+        FOVCircle.Visible = false
+    end
+
+    -- LOCK KEPALA: Aktif saat Klik Kiri (PC) atau Jempol sedang menembak di layar (HP)
+    if Config.Aimbot_Type == "Auto-Lock" and Attacking then
+        local targetPlayer = GetClosestPlayer()
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+            local targetHead = targetPlayer.Character.Head.Position
+            local camPos = Camera.CFrame.Position
+            local aimDirection = (targetHead - camPos).Unit
+            local targetCFrame = CFrame.lookAt(camPos, camPos + aimDirection)
+            
+            -- Gerakan mulus agar tidak guncang keras di HP Redmi
+            Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Aimbot_Smoothness)
+        end
+    end
+end)
+
+-- LOGIKA SLIDER INTERAKTIF
+local function UpdateSlider()
+    local percentage = math.clamp((UserInputService:GetMouseLocation().X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1)
+    local rawValue = math.floor(30 + (percentage * 270))
+    Config.FOV_Radius = rawValue
+    
+    SliderTitle.Text = "FOV SIZE: " .. tostring(rawValue)
+    SliderBar.Size = UDim2.new(percentage, 0, 1, 0)
+    SliderButton.Position = UDim2.new(percentage, -8, 0.5, -8)
+end
+
+local DraggingSlider = false
+SliderButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        DraggingSlider = true
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        DraggingSlider = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if DraggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        UpdateSlider()
+    end
+end)
+
+-- ==========================================
+-- [[ 4. INDEPENDENT PRO ESP ENGINE (FIXED) ]] --
+-- ==========================================
+local ActiveESP = {}
+
+local function CreateDraw(obj, props)
+    local draw = Drawing.new(obj)
+    for i, v in pairs(props) do draw[i] = v end
+    return draw
+end
+
+local function ClearESP(player)
+    if ActiveESP[player] then
+        for _, drawObj in pairs(ActiveESP[player]) do drawObj:Remove() end
+        ActiveESP[player] = nil
+    end
+end
+
+local function AddPremiumESP(Player)
+    if Player == LocalPlayer then return end
+
+    local BoxOutline = CreateDraw("Square", {Thickness = 3, Color = Color3.fromRGB(0,0,0), Filled = false, Transparency = 1, Visible = false})
+    local Box = CreateDraw("Square", {Thickness = 1, Color = Settings.BoxColor, Filled = false, Transparency = 1, Visible = false})
+    
+    local HealthOutline = CreateDraw("Line", {Thickness = 4, Color = Color3.fromRGB(0,0,0), Visible = false})
+    local HealthBar = CreateDraw("Line", {Thickness = 2, Visible = false})
+    
+    local Info = CreateDraw("Text", {Size = 11, Center = true, Outline = true, Font = 3, Color = Settings.TextColor, Visible = false})
+
+    ActiveESP[Player] = {BoxOutline, Box, HealthOutline, HealthBar, Info}
+
+    local RenderConn
+    RenderConn = RunService.RenderStepped:Connect(function()
+        if Config.ESP_Enabled and Player and Player.Parent and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local Hum = Player.Character:FindFirstChildOfClass("Humanoid")
+            local Root = Player.Character.HumanoidRootPart
+            local MyRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+          if Hum and Root and MyRoot and Hum.Health > 0 then
+                    local Pos, OnScreen = Camera:WorldToViewportPoint(Root.Position)
+
+                if OnScreen then
+                    local Size = 2000 / Pos.Z
+                    local BoxSize = Vector2.new(Size, Size * 1.5)
+                    local BoxPos = Vector2.new(Pos.X - BoxSize.X / 2, Pos.Y - BoxSize.Y / 2)
+
+                    -- 1. BOX BENING
+                    BoxOutline.Size = BoxSize
+                    BoxOutline.Position = BoxPos
+                    BoxOutline.Visible = true
+
+                    Box.Size = BoxSize
+                    Box.Position = BoxPos
+                    Box.Visible = true
+
+                    -- 2. HEALTH BAR PUTIH
+                    if Settings.HealthBar then
+                        local MaxHealth = Hum.MaxHealth > 0 and Hum.MaxHealth or 100
+                        local HealthOffset = (Hum.Health / MaxHealth) * BoxSize.Y
+                        
+                        HealthOutline.From = Vector2.new(BoxPos.X - 6, BoxPos.Y + BoxSize.Y)
+                        HealthOutline.To = Vector2.new(BoxPos.X - 6, BoxPos.Y)
+                        HealthOutline.Visible = true
+
+                        HealthBar.From = Vector2.new(BoxPos.X - 6, BoxPos.Y + BoxSize.Y)
+                        HealthBar.To = Vector2.new(BoxPos.X - 6, BoxPos.Y + BoxSize.Y - HealthOffset)
+                        HealthBar.Color = Settings.BoxColor
+                        HealthBar.Visible = true
+                    end
+
+                    -- 3. TEKS NAMA & JARAK
+                    if Settings.Distance then
+                        local Dist = math.floor((Root.Position - MyRoot.Position).Magnitude)
+                        Info.Text = string.upper(Player.Name) .. " | " .. Dist .. "M"
+                        Info.Position = Vector2.new(Pos.X, BoxPos.Y - 16)
+                        Info.Visible = true
+                    end
+                else
+                    BoxOutline.Visible = false; Box.Visible = false
+                    HealthOutline.Visible = false; HealthBar.Visible = false; Info.Visible = false
+                end
+            else
+                BoxOutline.Visible = false; Box.Visible = false
+                HealthOutline.Visible = false; HealthBar.Visible = false; Info.Visible = false
+            end
+        else
+            BoxOutline.Visible = false; Box.Visible = false
+            HealthOutline.Visible = false; HealthBar.Visible = false; Info.Visible = false
+            if not Players:FindFirstChild(Player.Name) then
+                ClearESP(Player)
+                RenderConn:Disconnect()
+            end
+        end
+    end)
+end
+
+-- LOGIKA NAVIGATION SIDEBAR TAB
+local TabListLayout = Instance.new("UIListLayout", TabPanel)
+TabListLayout.Padding = UDim.new(0, 5)
+
+local function SwitchTab(tabName)
+    for name, page in pairs(TabPages) do page.Visible = (name == tabName) end
+end
+
+local function AddTabButton(name)
+    local Btn = Instance.new("TextButton", TabPanel)
+    Btn.Size = UDim2.new(1, 0, 0, 35)
+    Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Btn.Text = name:upper()
+    Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 12
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+    Btn.MouseButton1Click:Connect(function() SwitchTab(name) end)
+end
+
+AddTabButton("Main")
+AddTabButton("ESP")
+AddTabButton("Misc")
+SwitchTab("Main")
+
+-- [[ 5. LOGIKA UTAMA INTERAKSI ]] --
+
+local function UnlockMenu()
+    KeyFrame.Visible = false
+    ToggleIcon.Visible = true
+    for _, v in pairs(Players:GetPlayers()) do AddPremiumESP(v) end
+    Players.PlayerAdded:Connect(AddPremiumESP)
+    Players.PlayerRemoving:Connect(ClearESP)
+end
+
+ToggleIcon.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    -- Tombol insert tetap dideteksi (untuk PC)
+    if input.KeyCode == Enum.KeyCode.Insert and not KeyFrame.Visible then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+-- Sakelar On/Off ESP
+ESPToggle.MouseButton1Click:Connect(function()
+    Config.ESP_Enabled = not Config.ESP_Enabled
+    if Config.ESP_Enabled then
+        ESPToggle.Text = "ESP: ON"
+        ESPToggle.BackgroundColor3 = Color3.fromRGB(0, 40, 20)
+        ESPStroke.Color = Color3.fromRGB(0, 255, 100)
+    else
+        ESPToggle.Text = "ESP: OFF"
+        ESPToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        ESPStroke.Color = Color3.fromRGB(50, 50, 50)
+    end
+end)
+
+-- Sakelar Mode Aimbot (3 Siklus Mode)
+AimbotToggle.MouseButton1Click:Connect(function()
+    if Config.Aimbot_Type == "Off" then
+        Config.Aimbot_Type = "Auto-Lock"
+        AimbotToggle.Text = "AIMBOT MODE: LOCK (TAP SHOOT)"
+        AimbotToggle.BackgroundColor3 = Color3.fromRGB(0, 40, 20)
+        AimStroke.Color = Color3.fromRGB(0, 255, 100)
+    elseif Config.Aimbot_Type == "Auto-Lock" then
+        Config.Aimbot_Type = "Silent Aim"
+        AimbotToggle.Text = "AIMBOT MODE: SILENT AIM (BODY)"
+        AimbotToggle.BackgroundColor3 = Color3.fromRGB(40, 0, 40)
+        AimStroke.Color = Color3.fromRGB(200, 0, 255)
+    else
+        Config.Aimbot_Type = "Off"
+        AimbotToggle.Text = "AIMBOT MODE: OFF"
+        AimbotToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        AimStroke.Color = Color3.fromRGB(50, 50, 50)
+    end
+end)
+
+-- Sakelar On/Off FOV Circle
+FOVToggle.MouseButton1Click:Connect(function()
+    Config.Show_FOV = not Config.Show_FOV
+    if Config.Show_FOV then
+        FOVToggle.Text = "SHOW FOV CIRCLE: ON"
+        FOVToggle.BackgroundColor3 = Color3.fromRGB(0, 40, 20)
+        FOVStroke.Color = Color3.fromRGB(0, 255, 100)
+    else
+        FOVToggle.Text = "SHOW FOV CIRCLE: OFF"
+        FOVToggle.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        FOVStroke.Color = Color3.fromRGB(50, 50, 50)
+    end
+end)
+
+CheckBtn.MouseButton1Click:Connect(function()
+    if KeyInput.Text == Config.CorrectKey then UnlockMenu() else KeyInput.Text = ""; KeyInput.PlaceholderText = "KUNCI SALAH!" end
+end)
+
+getgenv().setclip = setclipboard or toclipboard or (Clipboard and Clipboard.set)
+GetBtn.MouseButton1Click:Connect(function()
+    if getgenv().setclip then
+        getgenv().setclip(Config.KeyURL)
+        GetBtn.Text = "LINK COPIED!"
+        task.wait(1.5)
+        GetBtn.Text = "GET KEY"
+    else
+        GetBtn.Text = "Salin: " .. Config.KeyURL
+    end
+end)
