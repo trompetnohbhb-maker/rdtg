@@ -1,10 +1,13 @@
+-- [[ 0. PERLINDUNGAN LOADING ANTI-CRASH ]] --
+if not game:IsLoaded() then game.Loaded:Wait() end
+
 -- [[ 1. KONFIGURASI CHEAT ]] --
 local Config = {
     Aimbot_Type = "Silent Aim",
     Show_FOV = true,
     FOV_Radius = 150,
     Wallbang_Enabled = true,
-    ESP_Enabled = true, -- Mengaktifkan ESP Box
+    ESP_Enabled = true,
     UI_Color = Color3.fromRGB(255, 0, 50)
 }
 
@@ -15,18 +18,26 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local PlayerMouse = LocalPlayer:GetMouse()
 
--- Hapus UI lama jika ada biar tidak menumpuk
-if game:GetService("CoreGui"):FindFirstChild("Yuta_Test_Hub") then 
-    game:GetService("CoreGui").Yuta_Test_Hub:Destroy() 
+-- Penentuan Lokasi GUI (Aman untuk Mobile & PC Executor)
+local TargetGuiParent = game:GetService("CoreGui")
+local success, _ = pcall(function() local a = game:GetService("CoreGui").Name end)
+if not success then
+    TargetGuiParent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- [[ 2. PEMBUATAN UI MINIMALIS (TANPA KEY) ]] --
-local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+-- Bersihkan UI duplikat lama
+if TargetGuiParent:FindFirstChild("Yuta_Test_Hub") then 
+    TargetGuiParent.Yuta_Test_Hub:Destroy() 
+end
+
+-- [[ 2. PEMBUATAN UI MINIMALIS (GUARANTEED SPAWN) ]] --
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "Yuta_Test_Hub"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = TargetGuiParent
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 250, 0, 260) -- Menambah ukuran frame untuk tombol ESP
+MainFrame.Size = UDim2.new(0, 250, 0, 260)
 MainFrame.Position = UDim2.new(0.5, -125, 0.5, -130)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
@@ -42,7 +53,7 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 14
 Title.BackgroundTransparency = 1
 
--- Fungsi Drag Modern untuk UI
+-- Fungsi Geser UI Modern
 local function MakeDraggable(Frame)
     local Dragging, DragInput, DragStart, StartPosition
     Frame.InputBegan:Connect(function(input)
@@ -61,7 +72,7 @@ local function MakeDraggable(Frame)
 end
 MakeDraggable(MainFrame)
 
--- FUNGSI MEMBUAT TOMBOL UI
+-- Fungsi Pembuatan Tombol Fitur
 local function CreateToggle(name, pos, default, callback)
     local Btn = Instance.new("TextButton", MainFrame)
     Btn.Size = UDim2.new(1, -20, 0, 35)
@@ -82,11 +93,10 @@ local function CreateToggle(name, pos, default, callback)
     end)
 end
 
--- Menambahkan Tombol Fitur Ke UI
 CreateToggle("SILENT AIM", 50, true, function(v) Config.Aimbot_Type = v and "Silent Aim" or "Off" end)
 CreateToggle("SHOW FOV CIRCLE", 95, true, function(v) Config.Show_FOV = v end)
 CreateToggle("WALLBANG", 140, true, function(v) Config.Wallbang_Enabled = v end)
-CreateToggle("ESP PLAYER", 185, true, function(v) Config.ESP_Enabled = v end) -- Tombol ESP Baru
+CreateToggle("ESP PLAYER", 185, true, function(v) Config.ESP_Enabled = v end)
 
 -- [[ 3. LINGKARAN FOV VISUAL ]] --
 local FOVCircle = Drawing.new("Circle")
@@ -122,7 +132,7 @@ local function GetClosestPlayer()
     return Target
 end
 
--- [[ 5. CORE ENGINE ESP (BOX + HEALTH BAR) ]] --
+-- [[ 5. CORE ENGINE ESP ]] --
 local function BuildESP(TargetPlayer)
     local Box = Drawing.new("Square")
     Box.Visible = false
@@ -136,54 +146,47 @@ local function BuildESP(TargetPlayer)
     HealthBar.Thickness = 1
     HealthBar.Filled = true
 
-    local function UpdateESP()
-        local Connection
-        Connection = RunService.RenderStepped:Connect(function()
-            if Config.ESP_Enabled and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-                local RootPart = TargetPlayer.Character.HumanoidRootPart
-                local Humanoid = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
-                local Position, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+    local Connection
+    Connection = RunService.RenderStepped:Connect(function()
+        if Config.ESP_Enabled and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+            local RootPart = TargetPlayer.Character.HumanoidRootPart
+            local Humanoid = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
+            local Position, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
 
-                if OnScreen then
-                    -- Kalkulasi ukuran Box berdasarkan jarak musuh
-                    local Scale = 1 / (Position.Z * math.tan(math.rad(Camera.FieldOfView / 2))) * 1000
-                    local BoxX = Position.X - (Scale / 2)
-                    local BoxY = Position.Y - (Scale / 2)
+            if OnScreen then
+                local Scale = 1 / (Position.Z * math.tan(math.rad(Camera.FieldOfView / 2))) * 1000
+                local BoxX = Position.X - (Scale / 2)
+                local BoxY = Position.Y - (Scale / 2)
 
-                    -- Render Box ESP
-                    Box.Size = Vector2.new(Scale, Scale)
-                    Box.Position = Vector2.new(BoxX, BoxY)
-                    Box.Visible = true
+                Box.Size = Vector2.new(Scale, Scale)
+                Box.Position = Vector2.new(BoxX, BoxY)
+                Box.Visible = true
 
-                    -- Render Health Bar di sisi kiri Box
-                    local HealthPercentage = Humanoid.Health / Humanoid.MaxHealth
-                    HealthBar.Size = Vector2.new(3, Scale * HealthPercentage)
-                    HealthBar.Position = Vector2.new(BoxX - 6, BoxY + (Scale - (Scale * HealthPercentage)))
-                    HealthBar.Color = Color3.fromRGB(255 - (255 * HealthPercentage), 255 * HealthPercentage, 0) -- Transisi warna Hijau ke Merah jika sekarat
-                    HealthBar.Visible = true
-                else
-                    Box.Visible = false
-                    HealthBar.Visible = false
-                end
+                local HealthPercentage = Humanoid.Health / Humanoid.MaxHealth
+                HealthBar.Size = Vector2.new(3, Scale * HealthPercentage)
+                HealthBar.Position = Vector2.new(BoxX - 6, BoxY + (Scale - (Scale * HealthPercentage)))
+                HealthBar.Color = Color3.fromRGB(255 - (255 * HealthPercentage), 255 * HealthPercentage, 0)
+                HealthBar.Visible = true
             else
                 Box.Visible = false
                 HealthBar.Visible = false
-                if not TargetPlayer or not TargetPlayer.Parent then
-                    Box:Remove()
-                    HealthBar:Remove()
-                    Connection:Disconnect()
-                end
             end
-        end)
-    end
-    coroutine.wrap(UpdateESP)()
+        else
+            Box.Visible = false
+            HealthBar.Visible = false
+            if not TargetPlayer or not TargetPlayer.Parent then
+                Box:Remove()
+                HealthBar:Remove()
+                Connection:Disconnect()
+            end
+        end
+    end)
 end
 
--- Jalankan ESP untuk pemain yang sudah ada dan yang baru bergabung
 for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then BuildESP(p) end end
 Players.PlayerAdded:Connect(function(p) if p ~= LocalPlayer then BuildESP(p) end end)
 
--- [[ 6. HOOK METATABLE ENGINE (SILENT AIM + WALLBANG) ]] --
+-- [[ 6. HOOK METATABLE ENGINE ]] --
 local mt = getrawmetatable(game)
 local oldIndex = mt.__index
 local oldNamecall = mt.__namecall
@@ -212,11 +215,11 @@ mt.__namecall = newcclosure(function(self, ...)
             local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
             
             if targetBody then
-                local origin = args
-                args = (targetBody.Position - origin).Unit * 1000
+                local origin = args[2] -- Gunakan indeks array langsung untuk stabilitas parameter
+                args[3] = (targetBody.Position - origin).Unit * 1000
                 
                 if Config.Wallbang_Enabled then
-                    local params = args or RaycastParams.new()
+                    local params = args[4] or RaycastParams.new()
                     params.FilterType = Enum.RaycastFilterType.Exclude
                     local IgnoreList = {LocalPlayer.Character, workspace:FindFirstChild("Terrain")}
                     for _, obj in ipairs(workspace:GetChildren()) do
@@ -225,7 +228,7 @@ mt.__namecall = newcclosure(function(self, ...)
                         end
                     end
                     params.FilterDescendantsInstances = IgnoreList
-                    args = params
+                    args[4] = params
                 end
             end
             
@@ -234,17 +237,17 @@ mt.__namecall = newcclosure(function(self, ...)
             local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
             
             if targetBody then
-                local origin = args.Origin
-                args = Ray.new(origin, (targetBody.Position - origin).Unit * 1000)
+                local origin = args[1].Origin
+                args[1] = Ray.new(origin, (targetBody.Position - origin).Unit * 1000)
                 
                 if method == "FindPartOnRayWithIgnoreList" then
-                    local IgnoreList = args or {}
+                    local IgnoreList = args[2] or {}
                     for _, obj in ipairs(workspace:GetChildren()) do
                         if obj.Name ~= "Players" and obj ~= target.Character then
                             table.insert(IgnoreList, obj)
                         end
                     end
-                    args = IgnoreList
+                    args[2] = IgnoreList
                 end
             end
         end
