@@ -1,42 +1,257 @@
--- =======================================================
---          YUTAHUB V7.0 ULTRA-OBFUSCATOR COMPILER
--- =======================================================
-local ID_PASTEBIN_ASLI = "68qspC8i" -- ID Pastebin Anda sudah terpasang
+-- [[ 1. KONFIGURASI CHEAT ]] --
+local Config = {
+    Aimbot_Type = "Silent Aim",
+    Show_FOV = true,
+    FOV_Radius = 150,
+    Wallbang_Enabled = true,
+    ESP_Enabled = true, -- Mengaktifkan ESP Box
+    UI_Color = Color3.fromRGB(255, 0, 50)
+}
 
-local Url = "https://pastebin.com/raw/68qspC8i" .. ID_PASTEBIN_ASLI
-local Success, RawCode = pcall(function() return game:HttpGet(Url, true) end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local PlayerMouse = LocalPlayer:GetMouse()
 
-if Success and RawCode and not string.find(RawCode, "DOCTYPE html") then
-    -- 1. Kompilasi teks kode asli menjadi bytecode biner mesin
-    local CompiledFunction, CompileError = loadstring(RawCode)
-    if CompiledFunction then
-        local Bytecode = string.dump(CompiledFunction)
-        
-        -- 2. Mengubah bentuk bytecode menjadi teks string biner (\108\111\97...)
-        local EncryptedResult = ""
-        for i = 1, #Bytecode do
-            EncryptedResult = EncryptedResult .. "\\" .. string.byte(Bytecode, i)
-        end
-        
-        -- 3. Membungkus kode biner ke dalam wadah eksekusi string aman
-        local FinalScript = "loadstring(\"" .. EncryptedResult .. "\")()"
-        
-        -- 4. Otomatis menyalin hasilnya ke Clipboard HP / PC Anda
-        local setclip = setclipboard or toclipboard or (Clipboard and Clipboard.set)
-        if setclip then
-            setclip(FinalScript)
-            print("=========================================")
-            print("SUCCESS! KODE ULTRA-ACAK SUDAH DISALIN KE CLIPBOARD!")
-            print("Silakan buka Pastebin Anda, klik Edit, lalu Paste (Tempel) hasilnya di sana.")
-            print("=========================================")
-        else
-            -- Jika executor tidak mendukung clipboard, cetak teksnya ke F9 Console
-            print("KODE ULTRA-ACAK (Salin semua teks di bawah ini dari Console F9):")
-            print(FinalScript)
-        end
-    else
-        warn("[Compiler] Ada kesalahan sintaks pada kode asli Anda: " .. tostring(CompileError))
-    end
-else
-    warn("[Compiler] Gagal mengambil kode asli. Pastikan ID '" .. ID_PASTEBIN_ASLI .. "' benar dan internet aktif dan kuat.")
+-- Hapus UI lama jika ada biar tidak menumpuk
+if game:GetService("CoreGui"):FindFirstChild("Yuta_Test_Hub") then 
+    game:GetService("CoreGui").Yuta_Test_Hub:Destroy() 
 end
+
+-- [[ 2. PEMBUATAN UI MINIMALIS (TANPA KEY) ]] --
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "Yuta_Test_Hub"
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 250, 0, 260) -- Menambah ukuran frame untuk tombol ESP
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -130)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Config.UI_Color
+MainStroke.Thickness = 1.5
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "YUTA TESTING HUB"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+
+-- Fungsi Drag Modern untuk UI
+local function MakeDraggable(Frame)
+    local Dragging, DragInput, DragStart, StartPosition
+    Frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = true; DragStart = input.Position; StartPosition = Frame.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then Dragging = false end end)
+        end
+    end)
+    Frame.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then DragInput = input end end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == DragInput and Dragging then
+            local Delta = input.Position - DragStart
+            Frame.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+        end
+    end)
+end
+MakeDraggable(MainFrame)
+
+-- FUNGSI MEMBUAT TOMBOL UI
+local function CreateToggle(name, pos, default, callback)
+    local Btn = Instance.new("TextButton", MainFrame)
+    Btn.Size = UDim2.new(1, -20, 0, 35)
+    Btn.Position = UDim2.new(0, 10, 0, pos)
+    Btn.BackgroundColor3 = default and Config.UI_Color or Color3.fromRGB(30, 30, 30)
+    Btn.Text = name .. ": " .. (default and "ON" or "OFF")
+    Btn.TextColor3 = Color3.new(1, 1, 1)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 12
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+    
+    local state = default
+    Btn.MouseButton1Click:Connect(function()
+        state = not state
+        Btn.Text = name .. ": " .. (state and "ON" or "OFF")
+        Btn.BackgroundColor3 = state and Config.UI_Color or Color3.fromRGB(30, 30, 30)
+        callback(state)
+    end)
+end
+
+-- Menambahkan Tombol Fitur Ke UI
+CreateToggle("SILENT AIM", 50, true, function(v) Config.Aimbot_Type = v and "Silent Aim" or "Off" end)
+CreateToggle("SHOW FOV CIRCLE", 95, true, function(v) Config.Show_FOV = v end)
+CreateToggle("WALLBANG", 140, true, function(v) Config.Wallbang_Enabled = v end)
+CreateToggle("ESP PLAYER", 185, true, function(v) Config.ESP_Enabled = v end) -- Tombol ESP Baru
+
+-- [[ 3. LINGKARAN FOV VISUAL ]] --
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Color = Config.UI_Color
+FOVCircle.Thickness = 1.5
+FOVCircle.NumSides = 64
+FOVCircle.Filled = false
+
+RunService.RenderStepped:Connect(function()
+    FOVCircle.Visible = Config.Show_FOV
+    FOVCircle.Radius = Config.FOV_Radius
+    FOVCircle.Position = UserInputService:GetMouseLocation()
+end)
+
+-- [[ 4. LOGIKA TARGET TERDEKAT ]] --
+local function GetClosestPlayer()
+    local MaximumDistance = Config.FOV_Radius
+    local Target = nil
+    
+    for _, v in ipairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChildOfClass("Humanoid") and v.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+            local ScreenPoint, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+            if OnScreen then
+                local MousePos = UserInputService:GetMouseLocation()
+                local VectorDistance = (Vector2.new(ScreenPoint.X, ScreenPoint.Y) - MousePos).Magnitude
+                if VectorDistance < MaximumDistance then
+                    MaximumDistance = VectorDistance
+                    Target = v
+                end
+            end
+        end
+    end
+    return Target
+end
+
+-- [[ 5. CORE ENGINE ESP (BOX + HEALTH BAR) ]] --
+local function BuildESP(TargetPlayer)
+    local Box = Drawing.new("Square")
+    Box.Visible = false
+    Box.Color = Color3.fromRGB(255, 255, 255)
+    Box.Thickness = 1
+    Box.Filled = false
+
+    local HealthBar = Drawing.new("Square")
+    HealthBar.Visible = false
+    HealthBar.Color = Color3.fromRGB(0, 255, 0)
+    HealthBar.Thickness = 1
+    HealthBar.Filled = true
+
+    local function UpdateESP()
+        local Connection
+        Connection = RunService.RenderStepped:Connect(function()
+            if Config.ESP_Enabled and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid") and TargetPlayer.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                local RootPart = TargetPlayer.Character.HumanoidRootPart
+                local Humanoid = TargetPlayer.Character:FindFirstChildOfClass("Humanoid")
+                local Position, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+
+                if OnScreen then
+                    -- Kalkulasi ukuran Box berdasarkan jarak musuh
+                    local Scale = 1 / (Position.Z * math.tan(math.rad(Camera.FieldOfView / 2))) * 1000
+                    local BoxX = Position.X - (Scale / 2)
+                    local BoxY = Position.Y - (Scale / 2)
+
+                    -- Render Box ESP
+                    Box.Size = Vector2.new(Scale, Scale)
+                    Box.Position = Vector2.new(BoxX, BoxY)
+                    Box.Visible = true
+
+                    -- Render Health Bar di sisi kiri Box
+                    local HealthPercentage = Humanoid.Health / Humanoid.MaxHealth
+                    HealthBar.Size = Vector2.new(3, Scale * HealthPercentage)
+                    HealthBar.Position = Vector2.new(BoxX - 6, BoxY + (Scale - (Scale * HealthPercentage)))
+                    HealthBar.Color = Color3.fromRGB(255 - (255 * HealthPercentage), 255 * HealthPercentage, 0) -- Transisi warna Hijau ke Merah jika sekarat
+                    HealthBar.Visible = true
+                else
+                    Box.Visible = false
+                    HealthBar.Visible = false
+                end
+            else
+                Box.Visible = false
+                HealthBar.Visible = false
+                if not TargetPlayer or not TargetPlayer.Parent then
+                    Box:Remove()
+                    HealthBar:Remove()
+                    Connection:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(UpdateESP)()
+end
+
+-- Jalankan ESP untuk pemain yang sudah ada dan yang baru bergabung
+for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then BuildESP(p) end end
+Players.PlayerAdded:Connect(function(p) if p ~= LocalPlayer then BuildESP(p) end end)
+
+-- [[ 6. HOOK METATABLE ENGINE (SILENT AIM + WALLBANG) ]] --
+local mt = getrawmetatable(game)
+local oldIndex = mt.__index
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__index = newcclosure(function(self, index)
+    if Config.Aimbot_Type == "Silent Aim" and not checkcaller() then
+        if self == PlayerMouse and (index == "Hit" or index == "Target") then
+            local target = GetClosestPlayer()
+            local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
+            if targetBody then
+                return index == "Hit" and targetBody.CFrame or targetBody
+            end
+        end
+    end
+    return oldIndex(self, index)
+end)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+    
+    if Config.Aimbot_Type == "Silent Aim" and not checkcaller() then
+        if method == "Raycast" and self == workspace then
+            local target = GetClosestPlayer()
+            local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
+            
+            if targetBody then
+                local origin = args
+                args = (targetBody.Position - origin).Unit * 1000
+                
+                if Config.Wallbang_Enabled then
+                    local params = args or RaycastParams.new()
+                    params.FilterType = Enum.RaycastFilterType.Exclude
+                    local IgnoreList = {LocalPlayer.Character, workspace:FindFirstChild("Terrain")}
+                    for _, obj in ipairs(workspace:GetChildren()) do
+                        if obj.Name ~= "Players" and obj ~= target.Character then
+                            table.insert(IgnoreList, obj)
+                        end
+                    end
+                    params.FilterDescendantsInstances = IgnoreList
+                    args = params
+                end
+            end
+            
+        elseif (method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList") and Config.Wallbang_Enabled then
+            local target = GetClosestPlayer()
+            local targetBody = target and target.Character and (target.Character:FindFirstChild("UpperTorso") or target.Character:FindFirstChild("HumanoidRootPart"))
+            
+            if targetBody then
+                local origin = args.Origin
+                args = Ray.new(origin, (targetBody.Position - origin).Unit * 1000)
+                
+                if method == "FindPartOnRayWithIgnoreList" then
+                    local IgnoreList = args or {}
+                    for _, obj in ipairs(workspace:GetChildren()) do
+                        if obj.Name ~= "Players" and obj ~= target.Character then
+                            table.insert(IgnoreList, obj)
+                        end
+                    end
+                    args = IgnoreList
+                end
+            end
+        end
+    end
+    
+    setnamecallmethod(method)
+    return oldNamecall(self, unpack(args))
+end)
+
+setreadonly(mt, true)
