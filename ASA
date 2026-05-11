@@ -1,42 +1,42 @@
 -- =======================================================
 --          YUTAHUB V7.0 ULTRA-OBFUSCATOR COMPILER
 -- =======================================================
-local ID_PASTEBIN_ASLI = "68qspC8i" -- ID Pastebin kodemu saat ini
+local ID_PASTEBIN_ASLI = "68qspC8i" -- ID Pastebin Anda sudah terpasang
 
-local Url = "https://pastebin.com/raw/68qspC8i" .. ID_PASTEBIN_ASLI
+local Url = "pastebin.com" .. ID_PASTEBIN_ASLI
 local Success, RawCode = pcall(function() return game:HttpGet(Url, true) end)
 
-if Success and RawCode then
-    -- 1. Mengompilasi kode asli menjadi Bytecode Biner Mutlak (Mustahil dibaca)
+if Success and RawCode and not string.find(RawCode, "DOCTYPE html") then
+    -- 1. Kompilasi teks kode asli menjadi bytecode biner mesin
     local CompiledFunction, CompileError = loadstring(RawCode)
     if CompiledFunction then
         local Bytecode = string.dump(CompiledFunction)
         
-        -- 2. Mengubah bentuk bytecode menjadi teks biner bergaris miring (\108\111\97...)
+        -- 2. Mengubah bentuk bytecode menjadi teks string biner (\108\111\97...)
         local EncryptedResult = ""
         for i = 1, #Bytecode do
             EncryptedResult = EncryptedResult .. "\\" .. string.byte(Bytecode, i)
         end
         
-        -- 3. Membungkus kode biner ke dalam fungsi eksekusi aman
+        -- 3. Membungkus kode biner ke dalam wadah eksekusi string aman
         local FinalScript = "loadstring(\"" .. EncryptedResult .. "\")()"
         
-        -- 4. Otomatis menyalin hasilnya ke Clipboard HP / PC kamu
+        -- 4. Otomatis menyalin hasilnya ke Clipboard HP / PC Anda
         local setclip = setclipboard or toclipboard or (Clipboard and Clipboard.set)
         if setclip then
             setclip(FinalScript)
             print("=========================================")
-            print("SUCCESS! KODE ACAK TOTAL SUDAH DISALIN KE CLIPBOARD!")
-            print("Silakan buka Pastebin kamu, klik Edit, lalu Paste (Tempel) hasilnya di sana.")
+            print("SUCCESS! KODE ULTRA-ACAK SUDAH DISALIN KE CLIPBOARD!")
+            print("Silakan buka Pastebin Anda, klik Edit, lalu Paste (Tempel) hasilnya di sana.")
             print("=========================================")
         else
-            -- Jika executor tidak mendukung setclipboard, cetak ke Developer Console (F9)
-            print("KODE ACAK TOTAL (Salin semua teks di bawah ini):")
+            -- Jika executor tidak mendukung clipboard, cetak teksnya ke F9 Console
+            print("KODE ULTRA-ACAK (Salin semua teks di bawah ini dari Console F9):")
             print(FinalScript)
         end
     else
-        warn("Gagal menyusun kode, ada error sintaks: " .. tostring(CompileError))
+        warn("[Compiler] Ada kesalahan sintaks pada kode asli Anda: " .. tostring(CompileError))
     end
 else
-    warn("Gagal mengambil kode asli dari Pastebin.")
+    warn("[Compiler] Gagal mengambil kode asli. Pastikan ID '" .. ID_PASTEBIN_ASLI .. "' benar dan internet aktif.")
 end
