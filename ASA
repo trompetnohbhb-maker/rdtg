@@ -3,7 +3,7 @@
 -- =======================================================
 local ID_PASTEBIN_ASLI = "68qspC8i" -- ID Pastebin Anda sudah terpasang
 
-local Url = "pastebin.com" .. ID_PASTEBIN_ASLI
+local Url = "https://pastebin.com/raw/68qspC8i" .. ID_PASTEBIN_ASLI
 local Success, RawCode = pcall(function() return game:HttpGet(Url, true) end)
 
 if Success and RawCode and not string.find(RawCode, "DOCTYPE html") then
@@ -38,5 +38,5 @@ if Success and RawCode and not string.find(RawCode, "DOCTYPE html") then
         warn("[Compiler] Ada kesalahan sintaks pada kode asli Anda: " .. tostring(CompileError))
     end
 else
-    warn("[Compiler] Gagal mengambil kode asli. Pastikan ID '" .. ID_PASTEBIN_ASLI .. "' benar dan internet aktif.")
+    warn("[Compiler] Gagal mengambil kode asli. Pastikan ID '" .. ID_PASTEBIN_ASLI .. "' benar dan internet aktif dan kuat.")
 end
