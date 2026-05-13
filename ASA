@@ -1,136 +1,180 @@
+-- [[ 1. INITIATE SERVICES & CORE PROTECTION ]]
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
 
--- [[ 1. HAPUS GUI LAMA JIKA ADA ]] --
-if CoreGui:FindFirstChild("Underground_Premium") then 
-    CoreGui.Underground_Premium:Destroy() 
+-- Pastikan GUI lama dengan nama yang sama dibersihkan agar tidak menumpuk
+if CoreGui:FindFirstChild("Underground_CorePremium") then 
+    CoreGui.Underground_CorePremium:Destroy() 
 end
 
--- [[ 2. KONFIGURASI GLOBAL ]] --
+-- [[ 2. GLOBAL CHEAT CONFIGURATION ]]
 getgenv().VisualUnderground = false
 getgenv().SilentAim = false
 local OffsetKedalaman = Vector3.new(0, -25, 0)
-local UI_Color = Color3.fromRGB(255, 0, 0) -- Warna Tema Merah
+local UI_Color = Color3.fromRGB(255, 0, 0) -- Tema Merah Neon
 
--- [[ 3. STRUKTUR UTAMA SCREEN GUI ]] --
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Underground_Premium"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui
+-- [[ 3. MENGGUNAKAN TASK.SPAWN AGAR AMAN DARI ERROR LUAU GAME ]]
+task.spawn(function()
+    -- STRUKTUR UTAMA DI CORE GUI (Biar permanen di semua map)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "Underground_CorePremium"
+    ScreenGui.ResetOnSpawn = false
+    
+    -- Menggunakan pcall untuk memaksa bypass proteksi penulisan ke CoreGui
+    local success, err = pcall(function()
+        ScreenGui.Parent = CoreGui
+    end)
+    
+    -- Jika executor Anda tidak punya hak akses CoreGui, otomatis beralih ke PlayerGui agar tidak error
+    if not success then
+        ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
 
--- KOTAK CANVAS MENU UTAMA (BISA DIGERAKKAN/DRAGGABLE)
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 350, 0, 220)
-MainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
-MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-MainFrame.Active = true      
-MainFrame.Draggable = true -- Menyalakan fitur geser/bisa digerakkan di laptop & HP
-local MainCorner = Instance.new("UICorner", MainFrame)
-MainCorner.CornerRadius = UDim.new(0, 10)
+    -- KOTAK MENU PANEL
+    local MainFrame = Instance.new("Frame", ScreenGui)
+    MainFrame.Size = UDim2.new(0, 350, 0, 220)
+    MainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    MainFrame.Active = true      
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
-local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = UI_Color
-MainStroke.Thickness = 1.5
+    local MainStroke = Instance.new("UIStroke", MainFrame)
+    MainStroke.Color = UI_Color
+    MainStroke.Thickness = 1.5
 
--- JUDUL MENU
-local MainTitle = Instance.new("TextLabel", MainFrame)
-MainTitle.Size = UDim2.new(1, 0, 0, 40)
-MainTitle.Position = UDim2.new(0, 15, 0, 5)
-MainTitle.Text = "FF STYLE - UNDERGROUND PANEL"
-MainTitle.TextColor3 = Color3.new(1,1,1)
-MainTitle.Font = Enum.Font.GothamBold
-MainTitle.TextSize = 14
-MainTitle.TextXAlignment = Enum.TextXAlignment.Left
-MainTitle.BackgroundTransparency = 1
+    -- AREA JUDUL PANEL
+    local TitleBar = Instance.new("TextLabel", MainFrame)
+    TitleBar.Size = UDim2.new(1, 0, 0, 40)
+    TitleBar.Position = UDim2.new(0, 0, 0, 5)
+    TitleBar.Text = "      FF STYLE - UNDERGROUND PANEL"
+    TitleBar.TextColor3 = Color3.new(1, 1, 1)
+    TitleBar.Font = Enum.Font.GothamBold
+    TitleBar.TextSize = 14
+    TitleBar.TextXAlignment = Enum.TextXAlignment.Left
+    TitleBar.BackgroundTransparency = 1
 
--- [[ 4. TOMBOL FITUR 1: VISUAL UNDERGROUND ]] --
-local Toggle1 = Instance.new("TextButton", MainFrame)
-Toggle1.Size = UDim2.new(1, -30, 0, 45)
-Toggle1.Position = UDim2.new(0, 15, 0, 60)
-Toggle1.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Toggle1.Text = "Visual Underground: OFF"
-Toggle1.TextColor3 = Color3.new(1, 1, 1)
-Toggle1.Font = Enum.Font.GothamBold
-Toggle1.TextSize = 13
-Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
-local Stroke1 = Instance.new("UIStroke", Toggle1)
-Stroke1.Color = Color3.fromRGB(40, 40, 40)
+    -- [[ 4. LOGIKA DRAG MANUAL (MENGHINDARI EROR DEPRECATED) ]]
+    local dragging, dragInput, dragStart, startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
 
-Toggle1.MouseButton1Click:Connect(function()
-    getgenv().VisualUnderground = not getgenv().VisualUnderground
-    if getgenv().VisualUnderground then
-        Toggle1.Text = "Visual Underground: ON"
-        Toggle1.BackgroundColor3 = UI_Color
-    else
-        Toggle1.Text = "Visual Underground: OFF"
-        Toggle1.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        -- Reset posisi visual karakter kembali ke normal jika dimatikan
-        for _, player in pairs(Players:GetPlayers()) do
-            if player.Character then
-                player.Character:TranslateBy(Vector3.new(0, 25, 0))
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    MainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+
+    -- [[ 5. SAKELAR FITUR 1: VISUAL UNDERGROUND ]]
+    local Toggle1 = Instance.new("TextButton", MainFrame)
+    Toggle1.Size = UDim2.new(1, -30, 0, 45)
+    Toggle1.Position = UDim2.new(0, 15, 0, 60)
+    Toggle1.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Toggle1.Text = "Visual Underground: OFF"
+    Toggle1.TextColor3 = Color3.new(1, 1, 1)
+    Toggle1.Font = Enum.Font.GothamBold
+    Toggle1.TextSize = 13
+    Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
+    local Stroke1 = Instance.new("UIStroke", Toggle1)
+    Stroke1.Color = Color3.fromRGB(40, 40, 40)
+
+    Toggle1.MouseButton1Click:Connect(function()
+        getgenv().VisualUnderground = not getgenv().VisualUnderground
+        if getgenv().VisualUnderground then
+            Toggle1.Text = "Visual Underground: ON"
+            Toggle1.BackgroundColor3 = UI_Color
+        else
+            Toggle1.Text = "Visual Underground: OFF"
+            Toggle1.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            -- Kembalikan posisi semua pemain ke tanah semula
+            for _, player in pairs(Players:GetPlayers()) do
+                if player.Character then
+                    player.Character:TranslateBy(Vector3.new(0, 25, 0))
+                end
             end
         end
-    end
+    end)
+
+    -- [[ 6. SAKELAR FITUR 2: SILENT AIM ]]
+    local Toggle2 = Instance.new("TextButton", MainFrame)
+    Toggle2.Size = UDim2.new(1, -30, 0, 45)
+    Toggle2.Position = UDim2.new(0, 15, 0, 120)
+    Toggle2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Toggle2.Text = "Silent Aim: OFF"
+    Toggle2.TextColor3 = Color3.new(1, 1, 1)
+    Toggle2.Font = Enum.Font.GothamBold
+    Toggle2.TextSize = 13
+    Instance.new("UICorner", Toggle2).CornerRadius = UDim.new(0, 6)
+    local Stroke2 = Instance.new("UIStroke", Toggle2)
+    Stroke2.Color = Color3.fromRGB(40, 40, 40)
+
+    Toggle2.MouseButton1Click:Connect(function()
+        getgenv().SilentAim = not getgenv().SilentAim
+        if getgenv().SilentAim then
+            Toggle2.Text = "Silent Aim: ON"
+            Toggle2.BackgroundColor3 = UI_Color
+        else
+            Toggle2.Text = "Silent Aim: OFF"
+            Toggle2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        end
+    end)
+
+    -- [[ 7. TOMBOL UNTUK MENUTUP GUI ]]
+    local CloseBtn = Instance.new("TextButton", MainFrame)
+    CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+    CloseBtn.Position = UDim2.new(1, -40, 0, 10)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(30, 5, 5)
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.new(1,0,0)
+    CloseBtn.Font = Enum.Font.GothamBold
+    CloseBtn.TextSize = 14
+    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+    CloseBtn.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+    end)
 end)
 
--- [[ 5. TOMBOL FITUR 2: SILENT AIM ]] --
-local Toggle2 = Instance.new("TextButton", MainFrame)
-Toggle2.Size = UDim2.new(1, -30, 0, 45)
-Toggle2.Position = UDim2.new(0, 15, 0, 120)
-Toggle2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Toggle2.Text = "Silent Aim: OFF"
-Toggle2.TextColor3 = Color3.new(1, 1, 1)
-Toggle2.Font = Enum.Font.GothamBold
-Toggle2.TextSize = 13
-Instance.new("UICorner", Toggle2).CornerRadius = UDim.new(0, 6)
-local Stroke2 = Instance.new("UIStroke", Toggle2)
-Stroke2.Color = Color3.fromRGB(40, 40, 40)
-
-Toggle2.MouseButton1Click:Connect(function()
-    getgenv().SilentAim = not getgenv().SilentAim
-    if getgenv().SilentAim then
-        Toggle2.Text = "Silent Aim: ON"
-        Toggle2.BackgroundColor3 = UI_Color
-    else
-        Toggle2.Text = "Silent Aim: OFF"
-        Toggle2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    end
-end)
-
--- [[ 6. TOMBOL CLOSE/MINIMIZE KECIL ]] --
-local CloseBtn = Instance.new("TextButton", MainFrame)
-CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-CloseBtn.Position = UDim2.new(1, -40, 0, 10)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(30, 5, 5)
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.new(1,0,0)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 14
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy() -- Menutup total cheat panel
-end)
-
--- [[ 7. LOGIKA GAME: AMBLAS KE BAWAH TANAH (VISUAL SAJA) ]] --
+-- [[ 8. GAME LOOP LOOPING VISUAL (RENDERING) ]]
 RunService.RenderStepped:Connect(function()
     if not getgenv().VisualUnderground then return end
 
-    -- Menurunkan visual tubuh kita sendiri
-    if Players.LocalPlayer.Character then
-        Players.LocalPlayer.Character:TranslateBy(OffsetKedalaman)
+    if LocalPlayer.Character then
+        LocalPlayer.Character:TranslateBy(OffsetKedalaman)
     end
 
-    -- Menurunkan visual seluruh musuh
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= Players.LocalPlayer and player.Character then
+        if player ~= LocalPlayer and player.Character then
             player.Character:TranslateBy(OffsetKedalaman)
         end
     end
 end)
 
--- [[ 8. LOGIKA GAME: SILENT AIM HIT TARGET ASLI (METATABLE) ]] --
+-- [[ 9. METATABLE BYPASS UNTUK REGISTER HIT ]]
 local RawMetatable = getrawmetatable(game)
 local OldNamecall = RawMetatable.__namecall
 setreadonly(RawMetatable, false)
@@ -141,7 +185,7 @@ RawMetatable.__namecall = newcclosure(function(Object, ...)
 
     if getgenv().SilentAim and (Method == "FindPartOnRayWithIgnoreList" or Method == "Raycast" or Method == "FireServer") then
         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Players.LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
                 local TargetHead = player.Character.Head.Position
                 if Method == "Raycast" then
                     Args = (TargetHead - Args).Unit * 1000
