@@ -1,10 +1,58 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Website Pertamaku</title>
-</head>
-<body>
-    <h1>Halo Dunia!</h1>
-    <p>Ini adalah website gratis pertamaku yang bisa diakses semua orang.</p>
-</body>
-</html>
+local function CleanFly()
+    if FlyingConn then FlyingConn:Disconnect() FlyingConn = nil end
+    if BodyVelocity then BodyVelocity:Destroy() BodyVelocity = nil end
+    if BodyGyro then BodyGyro:Destroy() BodyGyro = nil end
+    pcall(function()
+        local Character = LocalPlayer.Character
+        if Character and Character:FindFirstChildOfClass("Humanoid") then
+            Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+        end
+    end)
+end
+ 
+local function StartFly()
+    CleanFly()
+ 
+    local Character = LocalPlayer.Character
+    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    if not RootPart or not Humanoid then return end
+ 
+    -- Membuat instansi gaya penahan gravitasi roblox
+    BodyVelocity = Instance.new("BodyVelocity")
+    BodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    BodyVelocity.Parent = RootPart
+ 
+    BodyGyro = Instance.new("BodyGyro")
+    BodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    BodyGyro.CFrame = Camera.CFrame
+    BodyGyro.Parent = RootPart
+ 
+    -- Mencegah karakter jatuh tersandung animasi roblox saat melayang
+    Humanoid.PlatformStand = true 
+ 
+    -- Thread render konstan agar navigasi arah mengikuti pandangan kamera (PC & HP Mobile)
+    FlyingConn = RunService.RenderStepped:Connect(function()
+        if not FlyConfig.Enabled or not RootPart.Parent or not Character:FindFirstChildOfClass("Humanoid") then
+            CleanFly()
+            return
+        end
+ 
+        BodyGyro.CFrame = Camera.CFrame
+        local MoveDirection = Humanoid.MoveDirection
+ 
+        -- FIX AKURASI: Sinkronisasi arah gerak berdasarkan pandangan Kamera + Vektor Tombol WASD / Analog HP [INDEX]
+        if MoveDirection.Magnitude > 0 then
+            -- Mentransformasi arah input analog/keyboard 2D menjadi pergerakan dunia 3D searah sorotan kamera [INDEX]
+            local CameraLook = Camera.CFrame.LookVector
+            local KecepatanTerbang = MoveDirection * FlyConfig.Value
+ 
+            -- Jika menatap ke atas/bawah, karakter otomatis terbang naik/turun sesuai input jalan [INDEX]
+            BodyVelocity.Velocity = Vector3.new(KecepatanTerbang.X, CameraLook.Y * FlyConfig.Value * (MoveDirection.Z < 0 and 1 or -1), KecepatanTerbang.Z)
+        else
+            -- Dikunci mati 0 agar tidak merosot jatuh ke bawah tanah akibat gravitasi [INDEX]
+            BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        end
+    end)
+end
